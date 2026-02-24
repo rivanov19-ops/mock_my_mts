@@ -1,0 +1,13 @@
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    environment:
+      - VIRTUAL_HOST=mymts.malev.ru
+      - LETSENCRYPT_HOST=mymts.malev.ru
+    networks:
+      - nginx-proxy
+
+networks:
+  nginx-proxy:
+    external: true
