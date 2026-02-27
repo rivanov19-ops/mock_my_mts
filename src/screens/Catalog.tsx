@@ -1,4 +1,4 @@
-import { ChevronRight, Phone, Heart, ArrowRight, Cpu, UserCheck, Wifi, Satellite, Music, Tv2, Gamepad2, Percent } from 'lucide-react'
+import { ChevronRight, Phone, Heart, ArrowRight, Cpu, UserCheck, Wifi, Satellite, Music, Tv2, Shield, PhoneCall } from 'lucide-react'
 import { BottomNav } from '../components/layout/BottomNav'
 import mock from '../core/data/mock'
 
@@ -70,48 +70,6 @@ export default function Catalog() {
         {/* ── Scrollable ── */}
         <div className="flex-1 overflow-y-auto pb-24 flex flex-col gap-6">
 
-          {/* Video banner */}
-          <div className="mx-4">
-            <div className="rounded-2xl overflow-hidden shadow-sm bg-black" style={{ aspectRatio: '16/9' }}>
-              <video
-                src="/promo.mov"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-
-          {/* Promo banner */}
-          <div className="mx-4">
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
-              <p className="font-sans font-black text-base text-gray-900 mb-3 leading-snug">
-                Ежедневные скидки,<br />игры и подарки от МТС
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  {/* 3 mini icons */}
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-                    style={{ background: 'linear-gradient(135deg, #9B59B6, #5B8DEF)' }}>
-                    <span className="text-white text-xs font-bold">✦</span>
-                  </div>
-                  <div className="w-8 h-8 rounded-xl bg-blue-400 flex items-center justify-center">
-                    <Gamepad2 size={16} color="white" strokeWidth={2} />
-                  </div>
-                  <div className="w-8 h-8 rounded-xl bg-pink-500 flex items-center justify-center">
-                    <Percent size={14} color="white" strokeWidth={2.5} />
-                  </div>
-                </div>
-                <p className="font-compact font-normal text-xs text-gray-500 flex-1 leading-snug">
-                  заходите и выбирайте то,<br />что вам нужно
-                </p>
-                <ChevronRight size={18} className="text-gray-300 shrink-0" />
-              </div>
-            </div>
-          </div>
-
           {/* Мобильная связь */}
           <Section title="Мобильная связь">
             <CatalogRow icon={Phone}      iconBg="#2196F3" label="Выбрать тариф"         sub="И подключиться к МТС" />
@@ -127,62 +85,8 @@ export default function Catalog() {
             <CatalogRow icon={Satellite} iconBg="#8B44AC" label="Спутниковое ТВ"         sub="Телевидение без кабеля" />
           </Section>
 
-          {/* Подписка МТС Premium */}
-          <div className="mx-4">
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
-              <div className="flex items-start gap-3 mb-4">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #9B59B6, #5B8DEF)' }}
-                >
-                  <span className="text-white font-bold text-lg">✦</span>
-                </div>
-                <div>
-                  <p className="font-sans font-black text-base text-gray-900 leading-tight">
-                    Подписка МТС Premium
-                  </p>
-                  <p className="font-compact font-normal text-xs text-gray-400 mt-0.5">
-                    Сервисы МТС для вас и ещё 3 близких
-                  </p>
-                </div>
-              </div>
-
-              {/* Service icons scroll */}
-              <div className="flex gap-4 overflow-x-auto pb-1 mb-5" style={{ scrollbarWidth: 'none' }}>
-                {[
-                  { label: 'Бесплатный старт\nпоездки', bg: '#4A90D9', icon: '🙂' },
-                  { label: 'KION',       bg: 'linear-gradient(135deg, #2C1654, #E30611)', text: 'KION' },
-                  { label: 'МТС Музыка', bg: '#E30611', iconEl: <Music size={22} color="white" strokeWidth={2} /> },
-                  { label: 'Строки',     bg: '#FF6B35', iconEl: <Tv2 size={22} color="white" strokeWidth={2} /> },
-                ].map(({ label, bg, icon, text, iconEl }) => (
-                  <div key={label} className="flex flex-col items-center gap-1.5 shrink-0">
-                    <div
-                      className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                      style={{ background: bg }}
-                    >
-                      {icon  && <span className="text-2xl">{icon}</span>}
-                      {text  && <span className="text-white font-bold text-sm">{text}</span>}
-                      {iconEl}
-                    </div>
-                    <p className="font-compact font-normal text-[10px] text-gray-500 text-center whitespace-pre-line leading-tight max-w-[68px]">
-                      {label}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {/* CTA */}
-              <button
-                className="w-full rounded-full py-4 font-sans font-bold text-sm text-white uppercase tracking-widest"
-                style={{ background: 'linear-gradient(135deg, #9B59B6 0%, #5B8DEF 100%)' }}
-              >
-                Подробнее о подписке
-              </button>
-            </div>
-          </div>
-
           {/* Отдых и развлечения */}
-          <div className="px-4 flex flex-col gap-3 pb-2">
+          <div className="px-4 flex flex-col gap-3">
             <h2 className="font-sans font-black text-xl text-gray-900">Отдых и развлечения с МТС</h2>
             <div className="grid grid-cols-2 gap-3">
               {[
@@ -207,6 +111,54 @@ export default function Catalog() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Полезное от МТС */}
+          <div className="px-4 flex flex-col gap-3 pb-2">
+            <h2 className="font-sans font-black text-xl text-gray-900">Полезное от МТС</h2>
+
+            {/* Сервисы VoiceTech — широкая карточка */}
+            <div className="bg-gray-100 rounded-2xl p-4 flex items-center justify-between overflow-hidden relative border border-gray-200" style={{ minHeight: 100 }}>
+              <div>
+                <p className="font-sans font-black text-base text-gray-900 leading-snug">Сервисы VoiceTech</p>
+                <p className="font-compact font-normal text-xs text-gray-500 mt-0.5">Сделают каждый звонок удобнее</p>
+              </div>
+              <span className="text-5xl select-none">🎙️</span>
+            </div>
+
+            {/* Секретарь+ — широкая карточка */}
+            <div className="bg-gray-100 rounded-2xl p-4 flex items-center justify-between overflow-hidden relative border border-gray-200" style={{ minHeight: 100 }}>
+              <div>
+                <p className="font-sans font-black text-base text-gray-900 leading-snug">Секретарь+</p>
+                <p className="font-compact font-normal text-xs text-gray-500 mt-0.5">Ответит сам, если занят, и пришлёт запись после каждого звонка</p>
+              </div>
+              <span className="text-5xl select-none">📋</span>
+            </div>
+
+            {/* Защитник и Интеллектуальная запись — список */}
+            <div className="bg-white rounded-2xl overflow-hidden divide-y divide-gray-100 shadow-sm">
+              <button className="w-full flex items-center gap-4 px-4 py-3.5 active:bg-gray-50 transition-colors">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 bg-red-600">
+                  <Shield size={24} color="white" strokeWidth={1.8} />
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="font-sans font-bold text-sm text-gray-900">Защитник</p>
+                  <p className="font-compact font-normal text-xs text-gray-400 mt-0.5">Умная защита от спам-звонков</p>
+                </div>
+                <ChevronRight size={18} className="text-gray-300 shrink-0" />
+              </button>
+
+              <button className="w-full flex items-center gap-4 px-4 py-3.5 active:bg-gray-50 transition-colors">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 bg-gray-200">
+                  <PhoneCall size={24} color="#555" strokeWidth={1.8} />
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="font-sans font-bold text-sm text-gray-900">Интеллектуальная запись</p>
+                  <p className="font-compact font-normal text-xs text-gray-400 mt-0.5">Автоматическая запись разговоров</p>
+                </div>
+                <ChevronRight size={18} className="text-gray-300 shrink-0" />
+              </button>
             </div>
           </div>
 

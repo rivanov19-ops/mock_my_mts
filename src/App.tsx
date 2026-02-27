@@ -9,6 +9,7 @@ import Money from './screens/Money'
 import Calls from './screens/Calls'
 import CallSettings from './screens/CallSettings'
 import CallsCatalog from './screens/CallsCatalog'
+import SecretaryPromo from './screens/SecretaryPromo'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
       <Route path="/calls" element={<Calls />} />
       <Route path="/calls/settings" element={<CallSettings />} />
       <Route path="/calls/catalog" element={<CallsCatalog />} />
+      <Route path="/calls/secretary-promo" element={<SecretaryPromo />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   )

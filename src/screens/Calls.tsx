@@ -296,7 +296,11 @@ export default function Calls() {
 
             {/* Banner */}
             {bannerVisible && (
-              <div className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: '#E8EAF4' }}>
+              <div
+                className="flex items-center gap-3 rounded-2xl px-4 py-3 cursor-pointer active:opacity-80 transition-opacity"
+                style={{ background: '#E8EAF4' }}
+                onClick={() => navigate('/calls/secretary-promo')}
+              >
                 {banner.icon === 'voicemail' ? (
                   <div className="shrink-0">
                     <svg width="28" height="18" viewBox="0 0 28 18" fill="none">

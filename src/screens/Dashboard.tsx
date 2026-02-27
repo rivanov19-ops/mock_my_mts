@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, ChevronRight, CheckCircle, Crown, Users, Smartphone, Tv, Home } from 'lucide-react'
+import { Bell, ChevronRight, CheckCircle, Crown, Users, Smartphone, Tv, Home, PhoneCall } from 'lucide-react'
 import { BottomNav } from '../components/layout/BottomNav'
 import mock from '../core/data/mock'
 
@@ -193,6 +193,27 @@ export default function Dashboard() {
                   <p className="font-compact font-normal text-xs text-gray-500">{sub}</p>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Баннер Секретарь+ */}
+          <div className="px-4 pb-2">
+            <div className="bg-white rounded-2xl p-5 flex items-center gap-4 shadow-sm">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+                style={{ background: 'linear-gradient(135deg, #4A90D9, #7B68EE)' }}
+              >
+                <PhoneCall size={22} color="white" strokeWidth={1.8} />
+              </div>
+              <div className="flex-1">
+                <p className="font-sans font-bold text-sm text-gray-900 leading-snug mb-0.5">
+                  Как сохранить спокойствие при любом разговоре?
+                </p>
+                <p className="font-compact font-normal text-xs text-gray-400 leading-snug">
+                  Всё о Секретарь+, который поможет
+                </p>
+              </div>
+              <ChevronRight size={18} className="text-gray-300 shrink-0" />
             </div>
           </div>
 
