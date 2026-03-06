@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, ChevronRight, CheckCircle, Crown, Users, Smartphone, Tv, Home, PhoneCall } from 'lucide-react'
 import { BottomNav } from '../components/layout/BottomNav'
@@ -34,6 +34,7 @@ const PROMO_CARDS = [
 
 export default function Dashboard() {
   const location   = useLocation()
+  const navigate   = useNavigate()
   const statePhone = (location.state as { phone?: string } | null)?.phone
   const phone      = statePhone ?? mock.user.phone
   const [showToast, setShowToast] = useState(!!statePhone)
@@ -194,6 +195,32 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* VoiceTech banner */}
+          <div className="px-4">
+            <button
+              onClick={() => navigate('/voicetech-auth')}
+              className="w-full bg-white rounded-2xl px-5 py-4 flex items-center gap-4 shadow-sm active:scale-[0.98] transition-transform"
+            >
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+                style={{ background: 'linear-gradient(135deg, #C8CCE8, #9FA8DA)' }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M2 3.5C2 3.5 3.5 1.5 5.5 3.5L7.5 5.5C8.2 6.2 7.5 7.5 7 8C6.5 8.5 7 9.5 8 10.5C9 11.5 10 12 10.5 11.5C11 11 12.3 10.3 13 11L15 13C17 15 15 16.5 15 16.5C11.5 19.5 -0.5 7.5 2 3.5Z" fill="#9FA8DA"/>
+                  <circle cx="17" cy="7" r="4" stroke="#9FA8DA" strokeWidth="1.8" fill="none"/>
+                  <path d="M17 5v2l1 1" stroke="#7986CB" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <div className="flex-1 text-left">
+                <p className="font-sans font-bold text-sm text-gray-900">Open VoiceTech</p>
+                <p className="font-compact font-normal text-xs text-gray-400 mt-0.5">
+                  Которыми с вами поделились
+                </p>
+              </div>
+              <ChevronRight size={18} className="text-gray-300 shrink-0" />
+            </button>
           </div>
 
           {/* Баннер Секретарь+ */}

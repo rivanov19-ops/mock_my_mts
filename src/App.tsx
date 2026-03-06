@@ -10,6 +10,8 @@ import Calls from './screens/Calls'
 import CallSettings from './screens/CallSettings'
 import CallsCatalog from './screens/CallsCatalog'
 import SecretaryPromo from './screens/SecretaryPromo'
+import VoiceTech from './screens/VoiceTech'
+import VoiceTechAuth from './screens/VoiceTechAuth'
 
 export default function App() {
   return (
@@ -25,6 +27,8 @@ export default function App() {
       <Route path="/calls/settings" element={<CallSettings />} />
       <Route path="/calls/catalog" element={<CallsCatalog />} />
       <Route path="/calls/secretary-promo" element={<SecretaryPromo />} />
+      <Route path="/voicetech" element={<VoiceTech />} />
+      <Route path="/voicetech-auth" element={<VoiceTechAuth />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   )

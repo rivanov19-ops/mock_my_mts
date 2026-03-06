@@ -30,6 +30,12 @@ export default function Placeholder() {
           >
             → Перейти к Dashboard
           </button>
+          <button
+            onClick={() => navigate('/voicetech-auth')}
+            className="text-mts-red text-sm font-medium underline"
+          >
+            → Open VoiceTech
+          </button>
         </div>
       </div>
     </div>
