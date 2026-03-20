@@ -14,16 +14,15 @@
     "react-router-dom": "^6.27.0",
     "zustand": "^4.5.5",
     "framer-motion": "^11.11.11",
-    "lucide-react": "^0.460.0"
-  },
-  "devDependencies": {
+    "lucide-react": "^0.460.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.48",
-    "tailwindcss": "^3.4.16",
-    "typescript": "^5.6.3",
-    "vite": "^5.4.10"
-  }
+    "tailwindcss": "^3.4.16"
+  },
+  "devDependencies": {}
 }

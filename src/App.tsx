@@ -7,6 +7,7 @@ import Catalog from './screens/Catalog'
 import Support from './screens/Support'
 import Money from './screens/Money'
 import Calls from './screens/Calls'
+import CallsToBe from './screens/CallsToBe'
 import CallSettings from './screens/CallSettings'
 import CallsCatalog from './screens/CallsCatalog'
 import SecretaryPromo from './screens/SecretaryPromo'
@@ -24,6 +25,7 @@ export default function App() {
       <Route path="/support" element={<Support />} />
       <Route path="/money" element={<Money />} />
       <Route path="/calls" element={<Calls />} />
+      <Route path="/calls/tobe" element={<CallsToBe />} />
       <Route path="/calls/settings" element={<CallSettings />} />
       <Route path="/calls/catalog" element={<CallsCatalog />} />
       <Route path="/calls/secretary-promo" element={<SecretaryPromo />} />

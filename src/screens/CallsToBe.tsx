@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Settings, X, Grid3x3, ArrowUpRight, Play, ArrowLeft, MoreHorizontal, Share2, ThumbsUp, ThumbsDown, Bell, FileText, AlignLeft } from 'lucide-react'
+import { Search, Settings, X, Grid3x3, ArrowUpRight, Play, ArrowLeft, MoreHorizontal, Share2, ThumbsUp, ThumbsDown, Bell, FileText } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { BottomNav } from '../components/layout/BottomNav'
 
@@ -166,34 +166,6 @@ function SecretaryIcon() {
 
 
 
-function TranscribeIcon() {
-  return (
-    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-      <svg width="20" height="16" viewBox="0 0 20 16" fill="none">
-        <path d="M2 8H10M7 5L10 8L7 11" stroke="#F44336" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M14 4H18M16 4V12" stroke="#F44336" strokeWidth="1.8" strokeLinecap="round"/>
-      </svg>
-    </div>
-  )
-}
-
-function AudioPlayer({ duration }: { duration: string }) {
-  return (
-    <div className="flex items-center gap-3 mt-2">
-      <button className="w-11 h-11 rounded-full bg-gray-900 flex items-center justify-center shrink-0">
-        <Play size={18} color="white" fill="white" className="ml-0.5"/>
-      </button>
-      <div className="flex-1 flex flex-col gap-1">
-        <div className="w-full h-1 bg-gray-200 rounded-full"/>
-        <div className="flex justify-between">
-          <span className="text-xs text-gray-400 font-compact">00:00</span>
-          <span className="text-xs text-gray-400 font-compact">{duration}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function CallAvatar({ initials, initialsColor, callType }: { initials?: string; initialsColor?: string; callType: CallType }) {
   const hasInitials = !!initials
   return (
@@ -219,7 +191,7 @@ function CallAvatar({ initials, initialsColor, callType }: { initials?: string; 
   )
 }
 
-// ─── List rows ────────────────────────────────────────────────────────────────
+// ─── Call rows ────────────────────────────────────────────────────────────────
 
 function CallRow({ entry }: { entry: CallEntry }) {
   return (
@@ -241,24 +213,26 @@ function CallRow({ entry }: { entry: CallEntry }) {
 function RecordingCard({ entry, showTranscript, onClick }: { entry: CallEntry; showTranscript?: boolean; onClick?: () => void }) {
   return (
     <div className="w-full bg-white rounded-2xl px-4 py-3.5 text-left cursor-pointer active:bg-gray-50 transition-colors" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }} onClick={onClick}>
-      <div className="flex items-start gap-4">
-        <CallAvatar initials={entry.initials} initialsColor={entry.initialsColor} callType={entry.callType}/>
+      <div className="flex items-start gap-3">
+        {/* Круглый аватар как на скрине */}
+        <div className="w-[46px] h-[46px] rounded-full flex items-center justify-center shrink-0 text-white font-sans font-bold text-base"
+          style={{ background: entry.initialsColor || '#9CA3AF' }}>
+          {entry.initials || entry.name.slice(0, 2).toUpperCase()}
+        </div>
         <div className="flex-1 min-w-0">
-          <p className="font-sans font-bold text-base text-gray-900 truncate">{entry.name}</p>
-          <p className="font-compact font-normal text-xs text-gray-400 mt-0.5">{entry.typeLabel}</p>
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="font-sans font-bold text-base text-gray-900 truncate">{entry.name}</p>
+            <span className="font-compact font-normal text-sm text-gray-400 shrink-0">{entry.time}</span>
+          </div>
+          <p className="font-compact font-normal text-sm text-gray-400 mt-0.5">{entry.typeLabel}</p>
           {entry.topic && (
-            <p className="font-compact font-normal text-xs text-gray-500 mt-1 leading-snug line-clamp-2">{entry.topic}</p>
+            <p className="font-compact font-normal text-sm text-gray-500 mt-0.5 leading-snug line-clamp-2">{entry.topic}</p>
+          )}
+          {showTranscript && entry.transcript && (
+            <p className="font-compact font-normal text-sm text-gray-900 mt-0.5">{entry.transcript.find(m => !m.self)?.text}</p>
           )}
         </div>
-        <span className="font-compact font-normal text-sm text-gray-500 shrink-0">{entry.time}</span>
       </div>
-      <div className="flex items-end gap-2 mt-1 pl-[68px]">
-        <div className="flex-1"><AudioPlayer duration={entry.duration!}/></div>
-        <TranscribeIcon/>
-      </div>
-      {showTranscript && entry.transcript && (
-        <p className="font-compact font-normal text-sm text-gray-900 mt-3 pl-1">{entry.transcript.find(m => !m.self)?.text}</p>
-      )}
     </div>
   )
 }
@@ -327,6 +301,7 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
     <div className="min-h-screen flex justify-center bg-white">
       <div className="w-full max-w-app flex flex-col min-h-screen">
 
+        {/* Header */}
         <div className="px-4 pt-12 pb-0 bg-white border-b border-gray-100 shrink-0">
           <div className="flex items-center gap-3 mb-2">
             <button onClick={onBack} className="w-9 h-9 flex items-center justify-center shrink-0">
@@ -362,6 +337,7 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
           </div>
         </div>
 
+        {/* Content */}
         <div className="flex-1 overflow-y-auto px-4 pt-4 pb-24 bg-gray-50">
           {summary ? (
             <>
@@ -377,6 +353,7 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
                 </div>
               </div>
               <p className="font-compact text-xs text-gray-400 mb-4">Составлены при помощи ИИ, возможны неточности</p>
+
               <div className="bg-white rounded-2xl overflow-hidden mb-3" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
                 {summary.blocks.map((b, i) => (
                   <div key={i} className="px-4 py-3.5" style={{ borderTop: i > 0 ? '1px solid #F2F2F7' : 'none' }}>
@@ -385,7 +362,9 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
                   </div>
                 ))}
               </div>
+
               <p className="font-compact text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Действия</p>
+
               {summary.actions.filter(a => a.type === 'reminder').length > 0 && (
                 <div className="bg-white rounded-2xl px-4 py-3.5 flex items-start gap-3 mb-2" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#34C75912' }}>
@@ -402,6 +381,7 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
                   </div>
                 </div>
               )}
+
               {summary.actions.filter(a => a.type === 'share').map((a, i) => (
                 <button key={i} onClick={doShare} className="w-full bg-white rounded-2xl px-4 py-3.5 flex items-center gap-3 text-left mb-2" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#007AFF12' }}>
@@ -429,6 +409,7 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
 
         <BottomNav/>
 
+        {/* Player sheet */}
         <AnimatePresence>
           {showPlayer && (
             <motion.div className="fixed inset-0 z-50 flex items-end justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -464,6 +445,7 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
           )}
         </AnimatePresence>
 
+        {/* Menu sheet */}
         <AnimatePresence>
           {showMenu && (
             <motion.div className="fixed inset-0 z-50 flex items-end justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -491,185 +473,42 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
 // ─── Transcript screen ────────────────────────────────────────────────────────
 
 function TranscriptScreen({ entry, onBack }: { entry: CallEntry; onBack: () => void }) {
-  const [showPlayer, setShowPlayer] = useState(false)
-  const [showMenu, setShowMenu] = useState(false)
-  const [showSummary, setShowSummary] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
-
-  const initials = entry.initials || entry.name.slice(0, 2).toUpperCase()
-  const initialsColor = entry.initialsColor || '#9CA3AF'
-  const summaryText = entry.summary?.blocks[0]?.content || ''
-
   return (
     <div className="min-h-screen flex justify-center bg-white">
       <div className="w-full max-w-app flex flex-col min-h-screen">
-
-        {/* Header */}
-        <div className="px-4 pt-12 pb-3 flex items-center gap-3 bg-white border-b border-gray-100">
-          <button onClick={onBack} className="w-9 h-9 flex items-center justify-center shrink-0">
-            <ArrowLeft size={22} className="text-gray-900" strokeWidth={2}/>
-          </button>
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: initialsColor }}>
-            <span className="text-white font-sans font-bold text-sm">{initials}</span>
+        <div className="px-4 pt-12 pb-3 bg-white border-b border-gray-100 shrink-0">
+          <div className="flex items-center">
+            <button onClick={onBack} className="flex items-center gap-1 mr-3 active:opacity-70">
+              <ArrowLeft size={20} className="text-blue-500" strokeWidth={2}/>
+              <span className="font-compact text-sm font-semibold text-blue-500">Итоги</span>
+            </button>
+            <div className="flex-1 text-center">
+              <p className="font-sans font-bold text-base text-gray-900">{entry.name}</p>
+              <p className="font-compact text-xs text-gray-400">Расшифровка · {entry.time}</p>
+            </div>
+            <div className="w-16"/>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-sans font-bold text-base text-gray-900 truncate">{entry.name}</p>
-            <p className="font-compact font-normal text-xs text-gray-400">{PHONE_NUMBER}</p>
-          </div>
-          <button onClick={() => setShowMenu(true)} className="w-9 h-9 flex items-center justify-center shrink-0">
-            <MoreHorizontal size={22} className="text-gray-700" strokeWidth={2}/>
-          </button>
         </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto pb-20">
-          <div className="px-4 pt-5">
-
-            {/* Call meta */}
-            <p className="font-compact font-normal text-sm text-gray-400 mb-1">{entry.date}</p>
-            <div className="flex items-center gap-2 mb-4">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 2C2 2 3 0.5 4.5 2L6 3.5C6.5 4 6 5 5.5 5.5C5 6 5.5 7 6.5 8C7.5 9 8.5 9.5 9 9C9.5 8.5 10.5 8 11 8.5L12.5 10C14 11.5 12.5 12.5 12.5 12.5C9.5 15 -0.5 5 2 2Z" fill="#4B5563"/>
-              </svg>
-              <span className="font-sans font-bold text-base text-gray-900">
-                {entry.typeLabel}{' '}
-                <span className="font-compact font-normal text-base text-gray-400">{entry.duration}</span>
-              </span>
-            </div>
-
-            {/* Audio controls */}
-            <div className="flex items-center gap-3 mb-5">
-              <button onClick={() => setShowPlayer(true)} className="flex items-center gap-2 bg-gray-100 rounded-full px-5 py-2.5 active:bg-gray-200 transition-colors">
-                <Play size={13} fill="#1A1A1A" color="#1A1A1A"/>
-                <span className="font-sans font-bold text-sm text-gray-900">Слушать</span>
-              </button>
-              <button onClick={() => setShowSummary(true)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center active:bg-gray-200 transition-colors">
-                <AlignLeft size={16} className="text-gray-700" strokeWidth={1.8}/>
-              </button>
-            </div>
-
-            <div className="border-t border-gray-100 mb-5"/>
-
-            {/* Expiry note */}
-            <p className="font-compact font-normal text-xs text-gray-400 text-center mb-5">
-              Детали звонка удалятся через 90 дней
-            </p>
-
-            {/* Transcript bubbles */}
-            <div className="flex flex-col gap-3">
-              {(entry.transcript || []).map((msg, i) => (
-                <div key={i} className={`flex flex-col gap-0.5 ${msg.self ? 'items-end' : 'items-start'}`}>
-                  {!msg.self && (
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ background: initialsColor }}>
-                        <span className="text-white font-sans font-bold" style={{ fontSize: 9 }}>{initials}</span>
-                      </div>
-                      <span className="font-sans font-bold text-sm text-gray-900">{entry.name}</span>
-                    </div>
-                  )}
-                  <div className={`max-w-[78%] px-4 py-3 rounded-2xl ${
-                    msg.self
-                      ? 'bg-gray-200 text-gray-900 rounded-tr-sm'
-                      : 'bg-gray-100 text-gray-900 rounded-tl-sm'
-                  }`}>
-                    <p className="font-compact font-normal text-base leading-snug">{msg.text}</p>
-                  </div>
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-24 flex flex-col gap-3">
+          <p className="font-compact text-xs text-gray-400 text-center mb-1">Детали звонка удалятся через 90 дней</p>
+          {(entry.transcript || []).map((msg, i) => (
+            <div key={i} className={`flex items-end gap-2 ${msg.self ? 'flex-row-reverse' : 'flex-row'}`}>
+              {!msg.self && (
+                <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-white font-bold" style={{ background: entry.initialsColor || '#9CA3AF', fontSize: 10 }}>
+                  {entry.initials}
                 </div>
-              ))}
+              )}
+              <div className="max-w-[72%]">
+                {!msg.self && <p className="font-compact text-[11px] text-gray-400 mb-1 ml-1">{msg.speaker}</p>}
+                <div className="px-4 py-2.5 font-compact text-sm leading-snug"
+                  style={{ background: msg.self ? '#007AFF' : 'white', color: msg.self ? 'white' : '#1C1C1E', borderRadius: msg.self ? '18px 18px 4px 18px' : '18px 18px 18px 4px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+                  {msg.text}
+                </div>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
-
         <BottomNav/>
-
-        {/* Player sheet */}
-        <AnimatePresence>
-          {showPlayer && (
-            <motion.div className="fixed inset-0 z-50 flex items-end justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div className="absolute inset-0 bg-black/20" onClick={() => setShowPlayer(false)}/>
-              <motion.div className="relative w-full max-w-app bg-white rounded-t-[24px] overflow-hidden" initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 28, stiffness: 300 }}>
-                <div className="flex justify-center pt-2 pb-1"><div className="w-10 h-1 rounded-full bg-gray-200"/></div>
-                <div className="px-5 pt-3 pb-10">
-                  <div className="mb-2">
-                    <div className="w-full h-1 bg-gray-200 rounded-full mb-1"><div className="w-0 h-1 bg-gray-900 rounded-full"/></div>
-                    <div className="flex justify-between">
-                      <span className="font-compact text-xs text-gray-400">00:00</span>
-                      <span className="font-compact text-xs text-gray-400">{entry.duration}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-center gap-5 mt-4">
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 active:bg-gray-200">
-                      <span className="font-sans font-bold text-xs text-gray-700">x1</span>
-                    </button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 active:bg-gray-200">
-                      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11a7 7 0 1 0 1.2-3.9" stroke="#374151" strokeWidth="1.8" strokeLinecap="round"/><path d="M4 5v4h4" stroke="#374151" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><text x="8" y="15" fontSize="5" fill="#374151" fontFamily="sans-serif" fontWeight="bold">10</text></svg>
-                    </button>
-                    <button onClick={() => setIsPlaying(p => !p)} className="w-14 h-14 rounded-2xl bg-gray-900 flex items-center justify-center active:scale-95 transition-transform">
-                      {isPlaying
-                        ? <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="4" height="14" rx="1.5" fill="white"/><rect x="12" y="3" width="4" height="14" rx="1.5" fill="white"/></svg>
-                        : <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 3.5L16.5 10 5 16.5V3.5Z" fill="white"/></svg>
-                      }
-                    </button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 active:bg-gray-200">
-                      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M18 11a7 7 0 1 1-1.2-3.9" stroke="#374151" strokeWidth="1.8" strokeLinecap="round"/><path d="M18 5v4h-4" stroke="#374151" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><text x="7" y="15" fontSize="5" fill="#374151" fontFamily="sans-serif" fontWeight="bold">10</text></svg>
-                    </button>
-                    <button onClick={() => setShowPlayer(false)} className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 active:bg-gray-200">
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2L12 12M12 2L2 12" stroke="#374151" strokeWidth="2" strokeLinecap="round"/></svg>
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Summary sheet */}
-        <AnimatePresence>
-          {showSummary && (
-            <motion.div className="fixed inset-0 z-50 flex items-end justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div className="absolute inset-0 bg-black/30" onClick={() => setShowSummary(false)}/>
-              <motion.div className="relative w-full max-w-app bg-white rounded-t-[24px] overflow-hidden" initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 28, stiffness: 300 }}>
-                <div className="flex justify-center pt-2 pb-1"><div className="w-10 h-1 rounded-full bg-gray-200"/></div>
-                <div className="px-5 pt-3 pb-10">
-                  <div className="flex items-start justify-between mb-1">
-                    <h2 className="font-sans font-bold text-xl text-gray-900">Итоги разговора</h2>
-                    <button onClick={() => setShowSummary(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 shrink-0 ml-2 active:bg-gray-200">
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2L12 12M12 2L2 12" stroke="#374151" strokeWidth="2" strokeLinecap="round"/></svg>
-                    </button>
-                  </div>
-                  <p className="font-compact font-normal text-sm text-gray-400 mb-5 leading-snug">
-                    Составлены при помощи ИИ, возможны неточности
-                  </p>
-                  <p className="font-compact font-normal text-base text-gray-900 leading-relaxed">{summaryText}</p>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Menu sheet */}
-        <AnimatePresence>
-          {showMenu && (
-            <motion.div className="fixed inset-0 z-50 flex items-end justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div className="absolute inset-0 bg-black/20" onClick={() => setShowMenu(false)}/>
-              <motion.div className="relative w-full max-w-app bg-white rounded-t-[24px] overflow-hidden" initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 28, stiffness: 300 }}>
-                <div className="flex justify-center pt-2 pb-1"><div className="w-10 h-1 rounded-full bg-gray-200"/></div>
-                <div className="px-5 pt-3 pb-10 flex items-center justify-between">
-                  <button className="flex items-center gap-3 py-2 active:opacity-70">
-                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 6h14M8 6V4h6v2M9 10v6M13 10v6M5 6l1 12h10L17 6" stroke="#E85D26" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    <span className="font-sans font-bold text-base text-[#E85D26]">Удалить звонок</span>
-                  </button>
-                  <button onClick={() => setShowMenu(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 active:bg-gray-200">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2L12 12M12 2L2 12" stroke="#374151" strokeWidth="2" strokeLinecap="round"/></svg>
-                  </button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
       </div>
     </div>
   )
@@ -687,7 +526,7 @@ const BANNERS: Record<FilterTab, { title: string; subtitle: string; icon: 'secre
 
 type DetailScreen = 'details' | 'transcript'
 
-export default function Calls() {
+export default function CallsToBe() {
   const navigate = useNavigate()
   const [bannerVisible, setBannerVisible] = useState(true)
   const [activeFilter, setActiveFilter] = useState<FilterTab>('Все')
@@ -709,144 +548,89 @@ export default function Calls() {
     <div className="min-h-screen flex justify-center" style={{ background: 'white' }}>
       <div className="w-full max-w-app flex flex-col min-h-screen relative">
 
-        {/* ── Header ── */}
-        <div
-          className="px-4 pt-12 pb-16"
-          style={{
-            background: 'linear-gradient(180deg, #1A1D38 0%, #252A52 35%, #4A5285 65%, #9BA3C8 85%, #D4D8EA 100%)',
-          }}
-        >
+        {/* Header */}
+        <div className="px-4 pt-12 pb-16" style={{ background: 'linear-gradient(180deg, #1A1D38 0%, #252A52 35%, #4A5285 65%, #9BA3C8 85%, #D4D8EA 100%)' }}>
           <div className="flex items-start justify-between">
             <div>
               <h1 className="font-sans font-black text-[1.75rem] text-white leading-tight">Звонки</h1>
-              <p className="font-compact font-normal text-sm" style={{ color: 'rgba(255,255,255,0.65)' }}>
-                {PHONE_NUMBER}
-              </p>
+              <p className="font-compact font-normal text-sm" style={{ color: 'rgba(255,255,255,0.65)' }}>{PHONE_NUMBER}</p>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <button
-                onClick={() => navigate('/calls/tobe')}
-                className="flex items-center active:opacity-50 transition-opacity"
-              >
-                <span className="font-compact text-xs underline underline-offset-2" style={{ color: 'rgba(255,255,255,0.55)' }}>ToBe</span>
+              <button onClick={() => navigate('/calls')} className="flex items-center active:opacity-50 transition-opacity">
+                <span className="font-compact text-xs underline underline-offset-2" style={{ color: 'rgba(255,255,255,0.55)' }}>AsIs</span>
               </button>
-              <button
-                onClick={() => navigate('/calls/catalog')}
-                className="h-9 px-4 rounded-full flex items-center justify-center active:opacity-70 transition-opacity"
-                style={{ background: 'rgba(255,255,255,0.18)' }}
-              >
-                <span className="font-sans font-bold text-xs text-white uppercase tracking-wide">Каталог</span>
+              <button className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
+                <Search size={18} className="text-white" strokeWidth={2}/>
               </button>
-              <button
-                onClick={() => navigate('/calls/settings')}
-                className="w-9 h-9 rounded-full flex items-center justify-center active:opacity-70 transition-opacity"
-                style={{ background: 'rgba(255,255,255,0.18)' }}
-              >
-                <Settings size={18} color="white" strokeWidth={1.5}/>
+              <button className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
+                <Settings size={18} className="text-white" strokeWidth={2}/>
               </button>
             </div>
           </div>
+          <div className="flex gap-2 mt-4">
+            {(['Все', 'Записи', 'Секретарь'] as FilterTab[]).map(tab => (
+              <button key={tab} onClick={() => { setActiveFilter(tab); setBannerVisible(true) }}
+                className="rounded-full px-4 py-1.5 font-compact font-normal text-sm transition-colors"
+                style={{ background: activeFilter === tab ? 'white' : 'rgba(255,255,255,0.15)', color: activeFilter === tab ? '#1A1D38' : 'white' }}>
+                {tab}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* ── White card ── */}
-        <div className="flex-1 bg-white rounded-t-[28px] -mt-10 overflow-y-auto pb-24 flex flex-col">
+        {/* Content */}
+        <div className="flex-1 bg-[#F0F0F5] rounded-t-[28px] -mt-10 overflow-y-auto pb-24">
+          <div className="px-4 pt-4 flex flex-col gap-3">
 
-          <div className="px-4 pt-5 pb-3 flex flex-col gap-4">
-
-            {/* Banner */}
             {bannerVisible && (
-              <div
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 cursor-pointer active:opacity-80 transition-opacity"
-                style={{ background: '#E8EAF4' }}
-                onClick={() => navigate('/calls/secretary-promo')}
-              >
-                {banner.icon === 'voicemail' ? (
-                  <div className="shrink-0">
-                    <svg width="28" height="18" viewBox="0 0 28 18" fill="none">
-                      <circle cx="8" cy="9" r="5.5" stroke="#374151" strokeWidth="2"/>
-                      <circle cx="20" cy="9" r="5.5" stroke="#374151" strokeWidth="2"/>
-                      <line x1="8" y1="14.5" x2="20" y2="14.5" stroke="#374151" strokeWidth="2"/>
-                    </svg>
-                  </div>
-                ) : (
-                  <div className="w-10 h-10 rounded-xl bg-gray-700 flex items-center justify-center shrink-0">
-                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                      <rect x="3" y="3" width="16" height="16" rx="5" stroke="white" strokeWidth="1.8"/>
-                      <circle cx="11" cy="11" r="2" fill="white"/>
-                    </svg>
-                  </div>
-                )}
+              <div className="bg-white rounded-2xl p-4 flex items-center gap-3" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
+                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+                  {banner.icon === 'secretary'
+                    ? <Grid3x3 size={18} className="text-gray-500" strokeWidth={1.8}/>
+                    : <svg width="20" height="14" viewBox="0 0 20 14" fill="none"><circle cx="5" cy="7" r="4" stroke="#9CA3AF" strokeWidth="2"/><circle cx="15" cy="7" r="4" stroke="#9CA3AF" strokeWidth="2"/><line x1="5" y1="11" x2="15" y2="11" stroke="#9CA3AF" strokeWidth="2"/></svg>
+                  }
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-sans font-bold text-sm text-gray-900">{banner.title}</p>
-                  <p className="font-compact font-normal text-xs text-gray-400 mt-0.5 leading-snug">{banner.subtitle}</p>
+                  <p className="font-compact font-normal text-xs text-gray-400 mt-0.5">{banner.subtitle}</p>
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); setBannerVisible(false) }} className="shrink-0 ml-1">
-                  <X size={16} className="text-gray-400" strokeWidth={2}/>
+                <button onClick={() => setBannerVisible(false)} className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 shrink-0">
+                  <X size={14} className="text-gray-500" strokeWidth={2}/>
                 </button>
               </div>
             )}
 
-            {/* Search */}
-            <div className="flex items-center gap-3 bg-gray-100 rounded-full px-4 py-3">
-              <Search size={16} className="text-gray-400 shrink-0" strokeWidth={1.5}/>
-              <span className="font-compact font-normal text-sm text-gray-400">Контакты</span>
-            </div>
-
-            {/* Filter pills */}
-            <div className="flex gap-2">
-              {(['Все', 'Записи', 'Секретарь'] as const).map(f => (
-                <button
-                  key={f}
-                  onClick={() => setActiveFilter(f)}
-                  className={`px-5 py-2 rounded-full font-compact font-semibold text-sm transition-colors
-                    ${activeFilter === f
-                      ? 'bg-gray-900 text-white'
-                      : 'bg-white border border-gray-200 text-gray-700'
-                    }`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="flex flex-col px-4">
-            {filteredLog.map(({ date, calls }) => (
-              <div key={date + activeFilter}>
-                <p className="font-compact font-bold text-sm text-gray-400 uppercase tracking-wider pt-5 pb-3">
-                  {date}
-                </p>
+            {filteredLog.map(group => (
+              <div key={group.date}>
+                <p className="font-compact font-normal text-xs text-gray-400 px-1 mb-2">{group.date}</p>
                 <div className="flex flex-col gap-3">
-                  {calls.map(entry =>
+                  {group.calls.map(entry =>
                     isCardView && entry.hasRecording ? (
                       <RecordingCard
-                        key={entry.id}
-                        entry={entry}
+                        key={entry.id} entry={entry}
                         showTranscript={activeFilter === 'Секретарь'}
                         onClick={() => { setDetailScreen('details'); setOpenEntry(entry) }}
                       />
                     ) : (
                       <CallRow key={entry.id} entry={entry}/>
-                    ),
+                    )
                   )}
                 </div>
               </div>
             ))}
           </div>
-
         </div>
 
-        {/* ── Floating dialpad ── */}
-        <button
-          className="fixed z-40 w-14 h-14 rounded-2xl bg-gray-900 flex items-center justify-center shadow-2xl active:scale-95 transition-transform"
-          style={{
-            bottom: '88px',
-            right: 'max(16px, calc((100vw - 390px) / 2 + 16px))',
-          }}
-        >
-          <Grid3x3 size={22} color="white" strokeWidth={1.5}/>
-        </button>
+        {/* Dialpad FAB */}
+        <div className="fixed bottom-20 right-4 max-w-app w-full pointer-events-none" style={{ maxWidth: '430px' }}>
+          <div className="flex justify-end pointer-events-auto">
+            <button className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #4A5285, #1A1D38)' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 11.3a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9.1a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" fill="white"/>
+              </svg>
+            </button>
+          </div>
+        </div>
 
         <BottomNav/>
       </div>
