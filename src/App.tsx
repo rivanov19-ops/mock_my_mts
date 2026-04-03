@@ -11,6 +11,10 @@ import CallsToBe from './screens/CallsToBe'
 import CallSettings from './screens/CallSettings'
 import CallsCatalog from './screens/CallsCatalog'
 import SecretaryPromo from './screens/SecretaryPromo'
+import SmartRecordingPromo from './screens/SmartRecordingPromo'
+import SecretaryPlusPromo from './screens/SecretaryPlusPromo'
+import NoiseReductionPromo from './screens/NoiseReductionPromo'
+import SecretaryAnswers from './screens/SecretaryAnswers'
 import VoiceTech from './screens/VoiceTech'
 import VoiceTechAuth from './screens/VoiceTechAuth'
 
@@ -29,6 +33,10 @@ export default function App() {
       <Route path="/calls/settings" element={<CallSettings />} />
       <Route path="/calls/catalog" element={<CallsCatalog />} />
       <Route path="/calls/secretary-promo" element={<SecretaryPromo />} />
+      <Route path="/calls/smart-recording-promo" element={<SmartRecordingPromo />} />
+      <Route path="/calls/secretary-plus-promo" element={<SecretaryPlusPromo />} />
+      <Route path="/calls/noise-reduction-promo" element={<NoiseReductionPromo />} />
+      <Route path="/calls/secretary-answers" element={<SecretaryAnswers />} />
       <Route path="/voicetech" element={<VoiceTech />} />
       <Route path="/voicetech-auth" element={<VoiceTechAuth />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

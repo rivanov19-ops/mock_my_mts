@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Settings, X, Grid3x3, ArrowUpRight, Play, ArrowLeft, MoreHorizontal, Share2, ThumbsUp, ThumbsDown, Bell, FileText, AlignLeft } from 'lucide-react'
+import { Search, Settings, X, Grid3x3, ArrowUpRight, Play, ArrowLeft, MoreHorizontal, ThumbsUp, ThumbsDown, Bell, FileText, AlignLeft } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { BottomNav } from '../components/layout/BottomNav'
 
@@ -166,17 +166,6 @@ function SecretaryIcon() {
 
 
 
-function TranscribeIcon() {
-  return (
-    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-      <svg width="20" height="16" viewBox="0 0 20 16" fill="none">
-        <path d="M2 8H10M7 5L10 8L7 11" stroke="#F44336" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M14 4H18M16 4V12" stroke="#F44336" strokeWidth="1.8" strokeLinecap="round"/>
-      </svg>
-    </div>
-  )
-}
-
 function AudioPlayer({ duration }: { duration: string }) {
   return (
     <div className="flex items-center gap-3 mt-2">
@@ -238,9 +227,9 @@ function CallRow({ entry }: { entry: CallEntry }) {
   )
 }
 
-function RecordingCard({ entry, showTranscript, onClick }: { entry: CallEntry; showTranscript?: boolean; onClick?: () => void }) {
+function RecordingCard({ entry, onTranscript, onSummary }: { entry: CallEntry; onTranscript?: () => void; onSummary?: () => void }) {
   return (
-    <div className="w-full bg-white rounded-2xl px-4 py-3.5 text-left cursor-pointer active:bg-gray-50 transition-colors" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }} onClick={onClick}>
+    <button className="w-full bg-white rounded-2xl px-4 py-3.5 text-left active:bg-gray-50 transition-colors" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }} onClick={onTranscript}>
       <div className="flex items-start gap-4">
         <CallAvatar initials={entry.initials} initialsColor={entry.initialsColor} callType={entry.callType}/>
         <div className="flex-1 min-w-0">
@@ -254,12 +243,13 @@ function RecordingCard({ entry, showTranscript, onClick }: { entry: CallEntry; s
       </div>
       <div className="flex items-end gap-2 mt-1 pl-[68px]">
         <div className="flex-1"><AudioPlayer duration={entry.duration!}/></div>
-        <TranscribeIcon/>
+        <button onClick={(e) => { e.stopPropagation(); onSummary?.() }} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0 active:bg-gray-200 transition-colors">
+          <svg width="18" height="14" viewBox="0 0 20 16" fill="none">
+            <path d="M2 2h16M2 6h16M2 10h16M2 14h16" stroke="#E85D26" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+        </button>
       </div>
-      {showTranscript && entry.transcript && (
-        <p className="font-compact font-normal text-sm text-gray-900 mt-3 pl-1">{entry.transcript.find(m => !m.self)?.text}</p>
-      )}
-    </div>
+    </button>
   )
 }
 
@@ -315,7 +305,13 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
   const [showMenu, setShowMenu] = useState(false)
   const [showPlayer, setShowPlayer] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [reminderToast, setReminderToast] = useState(false)
   const summary = entry.summary
+
+  const showReminderToast = () => {
+    setReminderToast(true)
+    setTimeout(() => setReminderToast(false), 2500)
+  }
 
   const doShare = () => {
     const text = summary?.shareText || entry.name
@@ -337,8 +333,10 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
               <p className="font-sans font-bold text-base text-gray-900 truncate">{entry.name}</p>
               <p className="font-compact font-normal text-xs text-gray-400">{PHONE_NUMBER}</p>
             </div>
-            <button onClick={doShare} className="w-9 h-9 flex items-center justify-center shrink-0">
-              <Share2 size={20} className="text-blue-500" strokeWidth={1.8}/>
+            <button onClick={doShare} className="w-9 h-9 flex items-center justify-center shrink-0 rounded-xl" style={{ background: '#E8F2FF' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0070E5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+              </svg>
             </button>
             <button onClick={() => setShowMenu(true)} className="w-9 h-9 flex items-center justify-center shrink-0">
               <MoreHorizontal size={20} className="text-gray-400" strokeWidth={2}/>
@@ -387,7 +385,7 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
               </div>
               <p className="font-compact text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Действия</p>
               {summary.actions.filter(a => a.type === 'reminder').length > 0 && (
-                <div className="bg-white rounded-2xl px-4 py-3.5 flex items-start gap-3 mb-2" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
+                <button onClick={showReminderToast} className="w-full bg-white rounded-2xl px-4 py-3.5 flex items-start gap-3 mb-2 text-left active:bg-gray-50 transition-colors" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#34C75912' }}>
                     <Bell size={18} color="#34C759" strokeWidth={1.8}/>
                   </div>
@@ -400,12 +398,14 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
                       </p>
                     ))}
                   </div>
-                </div>
+                </button>
               )}
               {summary.actions.filter(a => a.type === 'share').map((a, i) => (
                 <button key={i} onClick={doShare} className="w-full bg-white rounded-2xl px-4 py-3.5 flex items-center gap-3 text-left mb-2" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#007AFF12' }}>
-                    <Share2 size={18} color="#007AFF" strokeWidth={1.8}/>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#E8F2FF' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0070E5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+                    </svg>
                   </div>
                   <div>
                     <p className="font-sans font-bold text-sm text-gray-900">Поделиться итогами</p>
@@ -483,6 +483,27 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Reminder toast */}
+        <AnimatePresence>
+          {reminderToast && (
+            <motion.div
+              className="fixed bottom-24 left-0 right-0 flex justify-center z-50 px-5 pointer-events-none"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+              transition={{ type: 'spring', damping: 24, stiffness: 300 }}
+            >
+              <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl" style={{ background: '#1D2023', boxShadow: '0 4px 20px rgba(0,0,0,0.28)' }}>
+                <div className="w-5 h-5 rounded-full bg-[#34C759] flex items-center justify-center shrink-0">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M2 5l2.5 2.5 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <span className="font-compact text-[14px] text-white">Пришлём пуш в указанное время</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       </div>
     </div>
   )
@@ -823,8 +844,8 @@ export default function Calls() {
                       <RecordingCard
                         key={entry.id}
                         entry={entry}
-                        showTranscript={activeFilter === 'Секретарь'}
-                        onClick={() => { setDetailScreen('details'); setOpenEntry(entry) }}
+                        onTranscript={() => { setDetailScreen('transcript'); setOpenEntry(entry) }}
+                        onSummary={() => { setDetailScreen('details'); setOpenEntry(entry) }}
                       />
                     ) : (
                       <CallRow key={entry.id} entry={entry}/>
