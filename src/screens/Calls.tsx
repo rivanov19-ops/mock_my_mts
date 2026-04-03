@@ -776,9 +776,9 @@ export default function Calls() {
 
             {/* Banner */}
             {bannerVisible && (
+              <div className="banner-glow rounded-2xl p-[1.5px]">
               <div
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 cursor-pointer active:opacity-80 transition-opacity"
-                style={{ background: '#E8EAF4' }}
+                className="flex items-center gap-3 rounded-[14px] px-4 py-3 bg-white cursor-pointer active:opacity-80 transition-opacity"
                 onClick={() => navigate('/calls/secretary-promo')}
               >
                 {banner.icon === 'voicemail' ? (
@@ -804,6 +804,7 @@ export default function Calls() {
                 <button onClick={(e) => { e.stopPropagation(); setBannerVisible(false) }} className="shrink-0 ml-1">
                   <X size={16} className="text-gray-400" strokeWidth={2}/>
                 </button>
+              </div>
               </div>
             )}
 

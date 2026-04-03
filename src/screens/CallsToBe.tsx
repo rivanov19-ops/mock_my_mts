@@ -663,49 +663,26 @@ function CallRow({ entry }: { entry: CallEntry }) {
   )
 }
 
-function AudioPlayer({ duration }: { duration: string }) {
+function RecordingCard({ entry, onSummary }: { entry: CallEntry; onTranscript?: () => void; onSummary?: () => void }) {
   return (
-    <div className="flex items-center gap-3 mt-2">
-      <button className="w-11 h-11 rounded-full bg-gray-900 flex items-center justify-center shrink-0">
-        <Play size={18} color="white" fill="white" className="ml-0.5"/>
-      </button>
-      <div className="flex-1 flex flex-col gap-1">
-        <div className="w-full h-1 bg-gray-200 rounded-full"/>
-        <div className="flex justify-between">
-          <span className="text-xs text-gray-400 font-compact">00:00</span>
-          <span className="text-xs text-gray-400 font-compact">{duration}</span>
+    <button
+      className="w-full flex items-center gap-3 bg-white text-left active:opacity-85 transition-opacity"
+      style={{ borderRadius: 22, padding: '11px 14px 11px 11px', boxShadow: '0 1px 0 rgba(0,0,0,0.04)' }}
+      onClick={onSummary}
+    >
+      <CallAvatar entry={entry}/>
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-center mb-0.5">
+          <p className="font-sans text-[15px] font-semibold truncate" style={{ color: '#1D2023' }}>{entry.name}</p>
+          <span className="font-compact text-[13px] shrink-0 ml-2" style={{ color: '#8D969F' }}>{entry.time}</span>
         </div>
-      </div>
-    </div>
-  )
-}
-
-function RecordingCard({ entry, onTranscript, onSummary }: { entry: CallEntry; onTranscript?: () => void; onSummary?: () => void }) {
-  return (
-    <button className="w-full bg-white rounded-2xl px-4 py-3.5 text-left active:bg-gray-50 transition-colors" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }} onClick={onTranscript}>
-      <div className="flex items-start gap-4">
-        <CallAvatar entry={entry}/>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline justify-between gap-2">
-            <p className="font-sans font-bold text-base text-gray-900 truncate">{entry.name}</p>
-            <span className="font-compact font-normal text-sm text-gray-400 shrink-0">{entry.time}</span>
-          </div>
-          <p className="font-compact font-normal text-sm text-gray-400 mt-0.5">{entry.typeLabel}</p>
-          {entry.topic && (
-            <p className="font-compact font-normal text-sm text-gray-500 mt-0.5 leading-snug line-clamp-2">{entry.topic}</p>
-          )}
+        <div className="flex items-center gap-1 mb-0.5">
+          <CallTypeIcon callType={entry.callType}/>
+          <p className="font-compact text-[12px]" style={{ color: '#8D969F' }}>{entry.typeLabel}</p>
         </div>
-      </div>
-      <div className="flex items-end gap-2 mt-1 pl-[68px]">
-        <div className="flex-1"><AudioPlayer duration={entry.duration!}/></div>
-        <button
-          onClick={e => { e.stopPropagation(); onSummary?.() }}
-          className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0 active:bg-gray-200 transition-colors"
-        >
-          <svg width="18" height="14" viewBox="0 0 20 16" fill="none">
-            <path d="M2 2h16M2 6h16M2 10h16M2 14h16" stroke="#E85D26" strokeWidth="1.8" strokeLinecap="round"/>
-          </svg>
-        </button>
+        {entry.topic && (
+          <p className="font-compact text-[13px] leading-snug line-clamp-2" style={{ color: '#1D2023' }}>{entry.topic}</p>
+        )}
       </div>
     </button>
   )
