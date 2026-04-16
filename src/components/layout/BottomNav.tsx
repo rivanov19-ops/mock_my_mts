@@ -20,7 +20,7 @@ export function BottomNav() {
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       {TABS.map(({ label, icon: Icon, path }) => {
-        const active = pathname === path
+        const active = path === '/calls' ? pathname.startsWith('/calls') : pathname === path
         return (
           <button
             key={path}
