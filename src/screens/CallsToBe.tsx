@@ -7,7 +7,7 @@ import { BottomNav } from '../components/layout/BottomNav'
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type CallType = 'outgoing' | 'incoming' | 'secretary' | 'safe' | 'protected' | 'blocked'
-type FilterTab = 'Все' | 'Записи' | 'Секретарь'
+type FilterTab = 'Все' | 'Полезное' | 'Записи' | 'Секретарь'
 
 interface SummaryBlock { title: string; content: string }
 interface SummaryAction { type: 'reminder' | 'share'; text: string }
@@ -32,6 +32,7 @@ interface CallEntry {
   time: string
   date?: string
   voicemail?: boolean
+  noiseReduction?: boolean
   secretaryIcon?: boolean
   hasRecording?: boolean
   notRecorded?: boolean
@@ -41,6 +42,7 @@ interface CallEntry {
   topic?: string
   summary?: CallSummary
   transcript?: TranscriptMsg[]
+  favorite?: boolean
 }
 
 const PHONE_NUMBER = '+7 916 708-20-28'
@@ -50,10 +52,130 @@ const CALL_LOG: { date: string; calls: CallEntry[] }[] = [
     date: 'СЕГОДНЯ',
     calls: [
       {
+        id: 'r1', name: 'Реклама и опросы',
+        callType: 'incoming', typeLabel: 'Входящий', time: '22:22',
+        date: 'Сегодня, 22:22 · Входящий · 01:45',
+        hasRecording: true, duration: '01:45',
+        topic: 'Предложили участие в опросе по качеству связи, отказался',
+        summary: {
+          tplLabel: 'Сервисный / госорган', tplColor: '#8D969F',
+          blocks: [
+            { title: 'О чём говорили', content: 'Входящий звонок от рекламного агентства. Предложили пройти опрос о качестве мобильной связи за вознаграждение — подарочная карта на 500 рублей.' },
+            { title: 'Итог', content: 'Отказался от участия в опросе. Разговор завершён.' },
+            { title: 'На что обратить внимание', content: 'Возможный фишинг или сбор персональных данных под видом опроса. Номер не из официального списка МТС.' },
+          ],
+          actions: [],
+          shareText: 'Входящий от рекламного агентства — предложили опрос за вознаграждение. Отказался.',
+        },
+        transcript: [
+          { speaker: 'Неизвестный номер', self: false, text: 'Здравствуйте! Вас беспокоит агентство «МаркетПро». Вы являетесь клиентом МТС?' },
+          { speaker: 'Я', self: true, text: 'Да, являюсь' },
+          { speaker: 'Неизвестный номер', self: false, text: 'Отлично! Мы проводим опрос о качестве мобильной связи. Займёт 3 минуты, за участие — подарочная карта на 500 рублей.' },
+          { speaker: 'Я', self: true, text: 'Нет, спасибо, не интересует' },
+          { speaker: 'Неизвестный номер', self: false, text: 'Но это займёт совсем немного времени, и вы получите—' },
+          { speaker: 'Я', self: true, text: 'Спасибо, до свидания' },
+        ],
+      },
+      {
+        id: 'r2', name: 'Товары и услуги',
+        callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '21:35',
+        date: 'Сегодня, 21:35 · Секретарь · 01:12',
+        secretaryIcon: true, hasRecording: true, duration: '01:12',
+        topic: 'Звонили по поводу доставки посылки, уточнили адрес',
+        summary: {
+          tplLabel: 'Сервисный / госорган', tplColor: '#8D969F',
+          blocks: [
+            { title: 'О чём говорили', content: 'Звонок по поводу доставки посылки с Ozon. Курьер уточнял адрес и удобное время доставки — не смог найти нужный подъезд по указанному адресу.' },
+            { title: 'Договорились', content: 'Доставка сегодня с 18:00 до 21:00. Подъезд №2, домофон 47.' },
+            { title: 'Примечание', content: 'Звонок был принят Секретарём — вы были недоступны. Расшифровка сохранена автоматически.' },
+          ],
+          actions: [
+            { type: 'reminder', text: 'Ждать доставку Ozon сегодня с 18:00 до 21:00' },
+          ],
+          shareText: 'Курьер Ozon уточнял адрес — не мог найти подъезд. Договорились: доставка сегодня 18:00–21:00, подъезд №2, домофон 47.',
+        },
+        transcript: [
+          { speaker: 'Товары и услуги', self: false, text: 'Алло, здравствуйте. Я курьер, у меня для вас посылка с Ozon. Вы сейчас дома?' },
+          { speaker: 'Товары и услуги', self: false, text: 'Не могу найти нужный подъезд — написан адрес Ленина 42, но подъездов несколько.' },
+          { speaker: 'Товары и услуги', self: false, text: 'Можете уточнить подъезд и домофон? Буду ждать 10 минут.' },
+        ],
+      },
+      {
+        id: 's1', name: 'Бабушка', initials: 'БА', initialsColor: '#7B8EC8',
+        callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '21:26',
+        date: 'Сегодня, 21:26',
+        secretaryIcon: true, secretaryDuration: '40 сек', callerPhone: '+7 916 445-21-83',
+        hasRecording: true, duration: '00:40',
+        topic: 'Просила передать, чтобы маме перезвонил',
+        transcript: [
+          { speaker: 'Секретарь', self: true, text: 'Здравствуйте, хозяин сейчас занят. Чем могу помочь?' },
+          { speaker: 'Бабушка', self: false, text: 'Алло, это Оля. Передайте, пожалуйста, чтобы маме перезвонил — она ждёт.' },
+          { speaker: 'Секретарь', self: true, text: 'Хорошо, обязательно передам. Есть ещё что-нибудь?' },
+          { speaker: 'Бабушка', self: false, text: 'Нет, спасибо.' },
+          { speaker: 'Секретарь', self: true, text: 'Хорошо, до свидания!' },
+        ],
+      },
+      {
+        id: 'r3', name: 'Алёна Романова', initials: 'АР', initialsColor: '#7B8EC8',
+        callType: 'incoming', typeLabel: 'Входящий', time: '19:01',
+        date: 'Сегодня, 19:01 · Входящий · 06:44',
+        hasRecording: true, duration: '06:44', noiseReduction: true,
+        topic: 'Обсудили правки по презентации, договорились созвониться в пятницу',
+        summary: {
+          tplLabel: 'Созвон с коллегами', tplColor: '#5856D6',
+          blocks: [
+            { title: 'О чём говорили', content: 'Обсудили финальные правки презентации для клиента, согласовали структуру и визуал. Алёна подняла вопрос по срокам и ресурсам команды.' },
+            { title: 'Решения', content: 'Убрать слайд с финансовой моделью — перегружает\nЗаменить графики на инфографику\nДобавить кейсы в раздел «Результаты»' },
+            { title: 'Задачи и ответственные', content: 'Алёна — переделать слайды 4–7 → до четверга\nЯ — согласовать с клиентом → пятница до 17:00\nДизайнер — обновить визуал → сегодня' },
+            { title: 'Открытые вопросы', content: 'Не решили, включать ли блок с конкурентами. Обсудим в пятницу.' },
+            { title: 'На что обратить внимание', content: 'Дизайнер в отпуске в четверг — правки нужно передать сегодня.' },
+          ],
+          actions: [
+            { type: 'reminder', text: 'Передать правки дизайнеру сегодня до конца дня' },
+            { type: 'reminder', text: 'Созвон с Алёной в пятницу по открытым вопросам' },
+            { type: 'share', text: 'Поделиться итогами с Алёной' },
+          ],
+          shareText: 'Итоги созвона с Алёной:\n\nРешения: убрать финмодель, заменить графики, добавить кейсы.\nЗадачи:\n— Алёна: слайды 4–7 → до четверга\n— Дизайнер: визуал → сегодня\n— Я: согласование с клиентом → пятница до 17:00',
+        },
+        transcript: [
+          { speaker: 'Алёна Романова', self: false, text: 'Привет, у меня вопрос по презентации — клиент смотрел черновик?' },
+          { speaker: 'Я', self: true, text: 'Нет ещё, планирую отправить в пятницу' },
+          { speaker: 'Алёна Романова', self: false, text: 'Тогда давай сегодня обсудим правки. Слайды 4-7 надо переделать' },
+          { speaker: 'Я', self: true, text: 'Согласен, и убрать финансовую модель — она перегружает' },
+          { speaker: 'Алёна Романова', self: false, text: 'Точно. И добавить кейсы в раздел с результатами' },
+          { speaker: 'Я', self: true, text: 'Хорошо. По срокам — дизайнер в четверг в отпуске, надо передать ему правки сегодня' },
+          { speaker: 'Алёна Романова', self: false, text: 'Да, я помню. Слайды сделаю до четверга со своей стороны' },
+          { speaker: 'Я', self: true, text: 'Ок, созвонимся в пятницу?' },
+          { speaker: 'Алёна Романова', self: false, text: 'Договорились' },
+        ],
+      },
+      {
+        id: 's2', name: 'Алёна Романова', initials: 'АР', initialsColor: '#7B8EC8',
+        callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '18:40',
+        date: 'Сегодня, 18:40',
+        secretaryIcon: true, secretaryDuration: '55 сек', callerPhone: '+7 925 117-44-02',
+        hasRecording: true, duration: '00:55', favorite: true,
+        topic: 'Спрашивала насчёт встречи завтра в 15:00, просит подтвердить',
+        transcript: [
+          { speaker: 'Секретарь', self: true, text: 'Здравствуйте, хозяин сейчас занят. Чем могу помочь?' },
+          { speaker: 'Алёна Романова', self: false, text: 'Привет, это Алёна. Скажите, встреча завтра в 15:00 — всё в силе? Хочу убедиться.' },
+          { speaker: 'Секретарь', self: true, text: 'Записал ваш вопрос. Передам, что вы звонили насчёт завтрашней встречи в 15:00.' },
+          { speaker: 'Алёна Романова', self: false, text: 'Хорошо, спасибо. Пусть напишет, если что-то изменится.' },
+          { speaker: 'Секретарь', self: true, text: 'Понял, обязательно передам. Всего доброго!' },
+        ],
+      },
+      {
+        id: 'r8', name: '3620',
+        callType: 'outgoing', typeLabel: 'Исходящий · Не записан', time: '14:22',
+        date: 'Сегодня, 14:22 · Исходящий',
+        notRecorded: true, hasRecording: true,
+        topic: 'Сервисный номер — запись недоступна',
+      },
+      {
         id: '1', name: 'Мама', initials: 'М', initialsColor: '#FF2D55',
         callType: 'outgoing', typeLabel: 'Исходящий', time: '09:56',
         date: 'Сегодня, 09:56 · Исходящий · 02:29',
-        hasRecording: true, duration: '02:29',
+        hasRecording: true, duration: '02:29', noiseReduction: true,
         topic: 'Поговорили о поездке на дачу в выходные, обещал приехать в субботу',
         summary: {
           tplLabel: 'Звонок с родственником', tplColor: '#FF2D55',
@@ -82,7 +204,7 @@ const CALL_LOG: { date: string; calls: CallEntry[] }[] = [
     date: 'ВЧЕРА',
     calls: [
       {
-        id: '2', name: 'Оля Баба', initials: 'ОБ', initialsColor: '#7B8EC8',
+        id: '2', name: 'Бабушка', initials: 'БА', initialsColor: '#7B8EC8',
         callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '21:26',
         date: 'Вчера, 21:26 · Секретарь · 02:40',
         secretaryIcon: true, hasRecording: true, duration: '02:40',
@@ -96,28 +218,245 @@ const CALL_LOG: { date: string; calls: CallEntry[] }[] = [
           actions: [
             { type: 'reminder', text: 'Передать маме: Оля ждёт звонка' },
           ],
-          shareText: 'Оля Баба просила передать маме, чтобы та перезвонила.',
+          shareText: 'Бабушка просила передать маме, чтобы та перезвонила.',
         },
         transcript: [
-          { speaker: 'Оля Баба', self: false, text: 'Алло!' },
+          { speaker: 'Бабушка', self: false, text: 'Алло!' },
           { speaker: 'Секретарь', self: true, text: 'Здравствуйте, хозяин сейчас занят. Чем могу помочь?' },
-          { speaker: 'Оля Баба', self: false, text: 'Передайте, чтоб маме перезвонил.' },
+          { speaker: 'Бабушка', self: false, text: 'Передайте, чтоб маме перезвонил.' },
           { speaker: 'Секретарь', self: true, text: 'Хорошо, обязательно передам.' },
         ],
       },
       {
-        id: '3', name: 'Оля Баба', initials: 'ОБ', initialsColor: '#7B8EC8',
+        id: '3', name: 'Бабушка', initials: 'БА', initialsColor: '#7B8EC8',
         callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '21:22',
         date: 'Вчера, 21:22 · Секретарь · 00:15',
         secretaryIcon: true, hasRecording: true, duration: '00:15',
         topic: 'Короткий звонок, не оставила сообщения',
         transcript: [
-          { speaker: 'Оля Баба', self: false, text: 'Алло, ты там?' },
+          { speaker: 'Бабушка', self: false, text: 'Алло, ты там?' },
           { speaker: 'Секретарь', self: true, text: 'Хозяин сейчас занят.' },
-          { speaker: 'Оля Баба', self: false, text: 'Ладно, потом.' },
+          { speaker: 'Бабушка', self: false, text: 'Ладно, потом.' },
         ],
       },
-      { id: '10', name: '+7 926 777 88 16', callType: 'safe', typeLabel: 'Безопасный звонок', time: '18:45' },
+      { id: '10', name: '+7 926 777 88 16', callType: 'safe', typeLabel: 'Безопасный звонок', time: '18:45', favorite: true },
+    ],
+  },
+  {
+    date: '1 АПРЕЛЯ',
+    calls: [
+      {
+        id: 's3', name: 'Иван Васильев', initials: 'ИВ', initialsColor: '#7B8EC8',
+        callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '20:05',
+        date: '1 апреля, 20:05',
+        secretaryIcon: true, secretaryDuration: '1 мин 10 сек', callerPhone: '+7 926 831-77-55',
+        hasRecording: true, duration: '01:10',
+        topic: 'Уточнял про ресторан завтра — нужно ли бронировать столик',
+        transcript: [
+          { speaker: 'Секретарь', self: true, text: 'Добрый вечер! Хозяин недоступен. Могу принять сообщение.' },
+          { speaker: 'Иван Васильев', self: false, text: 'Привет, это Иван. Мы идём завтра в Hite или нет? Просто хочу уточнить, мне столик бронировать.' },
+          { speaker: 'Секретарь', self: true, text: 'Слушаю вас, записываю.' },
+          { speaker: 'Иван Васильев', self: false, text: 'Если идём — пусть напишет мне до 21:00, иначе забронирую на другой день.' },
+          { speaker: 'Секретарь', self: true, text: 'Записал — вы ждёте ответа по Hite до 21:00, иначе перенесёте. Передам.' },
+          { speaker: 'Иван Васильев', self: false, text: 'Спасибо, буду ждать!' },
+        ],
+      },
+      {
+        id: 'r4', name: 'Иван Васильев', initials: 'ИВ', initialsColor: '#7B8EC8',
+        callType: 'outgoing', typeLabel: 'Исходящий', time: '17:30',
+        date: '1 апреля, 17:30 · Исходящий · 02:15',
+        hasRecording: true, duration: '02:15', favorite: true,
+        topic: 'Договорились пойти в ресторан Hite на Серпуховской',
+        summary: {
+          tplLabel: 'Личный звонок', tplColor: '#34C759',
+          blocks: [
+            { title: 'О чём говорили', content: 'Договорились вместе погулять и зайти в корейский ресторан Hite на Большой Серпуховской.' },
+            { title: 'Договорились', content: 'Встреча вечером, Hite, ул. Большая Серпуховская 12/11 стр 2.' },
+          ],
+          actions: [
+            { type: 'reminder', text: 'Встреча с Иваном в Hite' },
+            { type: 'share', text: 'Поделиться итогами с Иваном' },
+          ],
+          shareText: 'Итоги разговора с Иваном:\n\nДоговорились встретиться вечером в Hite, ул. Большая Серпуховская, 12/11 стр 2.',
+        },
+        transcript: [
+          { speaker: 'Иван Васильев', self: false, text: 'Алло, привет! Как ты там?' },
+          { speaker: 'Я', self: true, text: 'Привет, отлично. А ты?' },
+          { speaker: 'Иван Васильев', self: false, text: 'Тоже хорошо. Го погулять?' },
+          { speaker: 'Я', self: true, text: 'Давай, как насчёт Hite?' },
+          { speaker: 'Иван Васильев', self: false, text: 'Который на Серпуховской? Погнали' },
+          { speaker: 'Я', self: true, text: 'Договорились' },
+        ],
+      },
+      {
+        id: 's4', name: 'Мама', initials: 'М', initialsColor: '#FF2D55',
+        callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '14:30',
+        date: '1 апреля, 14:30',
+        secretaryIcon: true, secretaryDuration: '45 сек', callerPhone: '+7 909 765-32-10',
+        hasRecording: true, duration: '00:45',
+        topic: 'Напоминала про аптеку — купить ибупрофен и валерьянку',
+        transcript: [
+          { speaker: 'Секретарь', self: true, text: 'Здравствуйте! Хозяин сейчас занят, могу передать сообщение.' },
+          { speaker: 'Мама', self: false, text: 'Сынок, это мама. Ты не забыл про аптеку? Купи ибупрофен и валерьянку.' },
+          { speaker: 'Секретарь', self: true, text: 'Хорошо, передам — вы напоминаете про ибупрофен и валерьянку из аптеки.' },
+          { speaker: 'Мама', self: false, text: 'Спасибо, жду тебя!' },
+        ],
+      },
+    ],
+  },
+  {
+    date: '31 МАРТА',
+    calls: [
+      {
+        id: 's5', name: 'Курьер Ozon', initials: 'OZ', initialsColor: '#0070E5',
+        callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '16:05',
+        date: '31 марта, 16:05',
+        secretaryIcon: true, secretaryDuration: '1 мин 20 сек', callerPhone: '+7 800 250-02-02',
+        hasRecording: true, duration: '01:20',
+        topic: 'Курьер не нашёл подъезд, ждёт 10 минут у первого входа',
+        transcript: [
+          { speaker: 'Секретарь', self: true, text: 'Добрый день! Хозяин недоступен. Слушаю вас.' },
+          { speaker: 'Курьер Ozon', self: false, text: 'Здравствуйте, я курьер Ozon. У меня посылка, не могу найти нужный подъезд — их тут несколько.' },
+          { speaker: 'Секретарь', self: true, text: 'К сожалению, уточнить у хозяина прямо сейчас не могу. Оставьте сообщение.' },
+          { speaker: 'Курьер Ozon', self: false, text: 'Хорошо, подожду 10 минут у первого подъезда слева.' },
+          { speaker: 'Секретарь', self: true, text: 'Понял, передам — вы ждёте 10 минут у первого подъезда слева.' },
+        ],
+      },
+      {
+        id: 'r5', name: 'Яндекс Еда', initials: 'ЯЕ', initialsColor: '#FF2D55',
+        callType: 'incoming', typeLabel: 'Входящий', time: '13:15',
+        date: '31 марта, 13:15 · Входящий · 00:58',
+        hasRecording: true, duration: '00:58',
+        topic: 'Курьер уточнил подъезд, доставка через 10 минут',
+        summary: {
+          tplLabel: 'Покупка / доставка', tplColor: '#FF9500',
+          blocks: [
+            { title: 'О чём говорили', content: 'Курьер Яндекс Еды звонил уточнить подъезд — не мог найти вход в здание. Заказ уже рядом, ждёт у входа.' },
+            { title: 'Договорились', content: 'Встреча у второго входа со стороны парковки. Курьер подождёт 5 минут.' },
+          ],
+          actions: [
+            { type: 'share', text: 'Поделиться итогами' },
+          ],
+          shareText: 'Курьер Яндекс Еды уточнял подъезд. Договорились встретиться у второго входа со стороны парковки.',
+        },
+        transcript: [
+          { speaker: 'Яндекс Еда', self: false, text: 'Алло, здравствуйте! Я курьер Яндекс Еды, уже рядом с вашим адресом' },
+          { speaker: 'Я', self: true, text: 'Да, привет' },
+          { speaker: 'Яндекс Еда', self: false, text: 'Не могу найти вход — тут два входа, какой ваш?' },
+          { speaker: 'Я', self: true, text: 'Второй вход, со стороны парковки' },
+          { speaker: 'Яндекс Еда', self: false, text: 'Понял, иду. Подождите у входа, буду через минуту' },
+          { speaker: 'Я', self: true, text: 'Хорошо, выхожу' },
+        ],
+      },
+    ],
+  },
+  {
+    date: '30 МАРТА',
+    calls: [
+      {
+        id: 'r6', name: 'Курьер Ozon', initials: 'OZ', initialsColor: '#0070E5',
+        callType: 'incoming', typeLabel: 'Входящий', time: '16:20',
+        date: '30 марта, 16:20 · Входящий · 01:30',
+        hasRecording: true, duration: '01:30',
+        topic: 'Не смог найти домофон, договорились встретиться у подъезда №2',
+        summary: {
+          tplLabel: 'Покупка / доставка', tplColor: '#FF9500',
+          blocks: [
+            { title: 'О чём говорили', content: 'Курьер Ozon не смог найти домофон — стоит у подъезда, но кнопки не видно. Заказ — коробка с техникой, габаритная.' },
+            { title: 'Договорились', content: 'Встреча у подъезда №2. Домофон спрятан справа от двери за козырьком.' },
+          ],
+          actions: [
+            { type: 'share', text: 'Поделиться итогами' },
+          ],
+          shareText: 'Курьер Ozon не нашёл домофон. Встретились у подъезда №2 — домофон справа от двери за козырьком.',
+        },
+        transcript: [
+          { speaker: 'Курьер Ozon', self: false, text: 'Добрый день! Я курьер Ozon, стою у вашего дома. Не могу найти домофон' },
+          { speaker: 'Я', self: true, text: 'Домофон справа от двери, за козырьком спрятан — его не сразу видно' },
+          { speaker: 'Курьер Ozon', self: false, text: 'А, вижу теперь. Но у меня тут коробка большая, сам не занесу — можете выйти?' },
+          { speaker: 'Я', self: true, text: 'Да, сейчас спущусь. Какой подъезд?' },
+          { speaker: 'Курьер Ozon', self: false, text: 'Второй, я у ступенек стою' },
+          { speaker: 'Я', self: true, text: 'Иду' },
+        ],
+      },
+      {
+        id: 's6', name: 'МТС', initials: 'МТ', initialsColor: '#E30611',
+        callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '13:00',
+        date: '30 марта, 13:00',
+        secretaryIcon: true, secretaryDuration: '30 сек', callerPhone: '+7 800 250-08-90',
+        hasRecording: true, duration: '00:30',
+        topic: 'Автоуведомление о низком балансе',
+        transcript: [
+          { speaker: 'МТС', self: false, text: 'Здравствуйте! Это автоматическое уведомление МТС. Ваш баланс ниже 50 рублей. Рекомендуем пополнить счёт для сохранения услуг.' },
+          { speaker: 'Секретарь', self: true, text: 'Сообщение получено и записано.' },
+        ],
+      },
+      {
+        id: 's7', name: 'Яндекс Еда', initials: 'ЯЕ', initialsColor: '#FF2D55',
+        callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '11:15',
+        date: '30 марта, 11:15',
+        secretaryIcon: true, secretaryDuration: '50 сек', callerPhone: '+7 495 739-70-00',
+        hasRecording: true, duration: '00:50',
+        topic: 'Курьер не мог найти подъезд, ждал 5 минут у первого входа',
+        transcript: [
+          { speaker: 'Секретарь', self: true, text: 'Здравствуйте! Хозяин занят. Слушаю.' },
+          { speaker: 'Яндекс Еда', self: false, text: 'Алло, я курьер Яндекс Еды. Стою у дома, не могу найти подъезд — тут два входа.' },
+          { speaker: 'Секретарь', self: true, text: 'К сожалению, не могу уточнить детали прямо сейчас. Оставьте сообщение.' },
+          { speaker: 'Яндекс Еда', self: false, text: 'Подожду 5 минут у первого входа слева, потом уеду.' },
+          { speaker: 'Секретарь', self: true, text: 'Записал — курьер ждёт 5 минут у первого входа слева.' },
+        ],
+      },
+      {
+        id: 'r7', name: 'Мама', initials: 'М', initialsColor: '#FF2D55',
+        callType: 'outgoing', typeLabel: 'Исходящий', time: '10:45',
+        date: '30 марта, 10:45 · Исходящий · 04:17',
+        hasRecording: true, duration: '04:17',
+        topic: 'Поговорили о поездке на дачу, обещал приехать в субботу',
+        summary: {
+          tplLabel: 'Звонок с родственником', tplColor: '#FF2D55',
+          blocks: [
+            { title: 'О чём говорили', content: 'Мама предложила приехать на дачу в эти выходные. Обсудили, что привезти — попросила лекарства из аптеки и немного продуктов.' },
+            { title: 'Договорились', content: 'Приеду в субботу на электричке, отправление в 10:22 с Курского вокзала.\nКупить: ибупрофен, валерьянка, хлеб, сыр, кефир.' },
+            { title: 'Открытые вопросы', content: 'Уточнить, нужно ли что-то ещё из инструментов для дачи.' },
+          ],
+          actions: [
+            { type: 'reminder', text: 'Электричка в субботу 10:22, Курский вокзал' },
+            { type: 'reminder', text: 'Купить: ибупрофен, валерьянка, хлеб, сыр, кефир' },
+            { type: 'share', text: 'Поделиться итогами с Мамой' },
+          ],
+          shareText: 'Звонок с мамой:\n\nЕду на дачу в субботу, электричка 10:22 с Курского.\nКупить: ибупрофен, валерьянка, хлеб, сыр, кефир.',
+        },
+        transcript: [
+          { speaker: 'Мама', self: false, text: 'Алло, сынок! Ты как, всё хорошо?' },
+          { speaker: 'Я', self: true, text: 'Привет, мам! Да всё хорошо, работаю' },
+          { speaker: 'Мама', self: false, text: 'Ну и ладно. Слушай, ты в эти выходные сможешь на дачу приехать?' },
+          { speaker: 'Я', self: true, text: 'В субботу могу. На электричке приеду, в 10:22 с Курского' },
+          { speaker: 'Мама', self: false, text: 'Хорошо! Привези, пожалуйста, ибупрофен и валерьянку из аптеки' },
+          { speaker: 'Я', self: true, text: 'Хорошо, запишу. Что-нибудь из продуктов нужно?' },
+          { speaker: 'Мама', self: false, text: 'Хлеб возьми, сыр и кефир. Тут ничего нет нормального' },
+          { speaker: 'Я', self: true, text: 'Ладно, всё куплю. До субботы тогда!' },
+          { speaker: 'Мама', self: false, text: 'Жду тебя, целую!' },
+        ],
+      },
+    ],
+  },
+  {
+    date: '29 МАРТА',
+    calls: [
+      {
+        id: 's8', name: '+7 926 555 33 11',
+        callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '19:30',
+        date: '29 марта, 19:30',
+        secretaryIcon: true, secretaryDuration: '35 сек', callerPhone: '+7 926 555-33-11',
+        hasRecording: true, duration: '00:35',
+        topic: 'Интересовался объявлением о продаже, попросил перезвонить',
+        transcript: [
+          { speaker: 'Секретарь', self: true, text: 'Добрый вечер! Хозяин недоступен. Могу принять сообщение.' },
+          { speaker: '+7 926 555 33 11', self: false, text: 'Здравствуйте, я по поводу объявления на Авито. Квартира ещё продаётся?' },
+          { speaker: 'Секретарь', self: true, text: 'Записал ваш вопрос по объявлению. Хозяин вам перезвонит.' },
+          { speaker: '+7 926 555 33 11', self: false, text: 'Спасибо, буду ждать.' },
+        ],
+      },
     ],
   },
   {
@@ -244,7 +583,7 @@ const RECORDING_LOG: { date: string; calls: CallEntry[] }[] = [
         id: 'r4', name: 'Иван Васильев', initials: 'ИВ', initialsColor: '#7B8EC8',
         callType: 'outgoing', typeLabel: 'Исходящий', time: '17:30',
         date: '1 апреля, 17:30 · Исходящий · 02:15',
-        hasRecording: true, duration: '02:15',
+        hasRecording: true, duration: '02:15', favorite: true,
         topic: 'Договорились пойти в ресторан Hite на Серпуховской',
         summary: {
           tplLabel: 'Личный звонок', tplColor: '#34C759',
@@ -372,7 +711,7 @@ const SECRETARY_LOG: { date: string; calls: CallEntry[] }[] = [
     date: 'СЕГОДНЯ',
     calls: [
       {
-        id: 's1', name: 'Оля Баба', initials: 'ОБ', initialsColor: '#7B8EC8',
+        id: 's1', name: 'Бабушка', initials: 'БА', initialsColor: '#7B8EC8',
         callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '21:26',
         date: 'Сегодня, 21:26',
         secretaryDuration: '40 сек', callerPhone: '+7 916 445-21-83',
@@ -380,9 +719,9 @@ const SECRETARY_LOG: { date: string; calls: CallEntry[] }[] = [
         topic: 'Просила передать, чтобы маме перезвонил',
         transcript: [
           { speaker: 'Секретарь', self: true, text: 'Здравствуйте, хозяин сейчас занят. Чем могу помочь?' },
-          { speaker: 'Оля Баба', self: false, text: 'Алло, это Оля. Передайте, пожалуйста, чтобы маме перезвонил — она ждёт.' },
+          { speaker: 'Бабушка', self: false, text: 'Алло, это Оля. Передайте, пожалуйста, чтобы маме перезвонил — она ждёт.' },
           { speaker: 'Секретарь', self: true, text: 'Хорошо, обязательно передам. Есть ещё что-нибудь?' },
-          { speaker: 'Оля Баба', self: false, text: 'Нет, спасибо.' },
+          { speaker: 'Бабушка', self: false, text: 'Нет, спасибо.' },
           { speaker: 'Секретарь', self: true, text: 'Хорошо, до свидания!' },
         ],
       },
@@ -391,7 +730,7 @@ const SECRETARY_LOG: { date: string; calls: CallEntry[] }[] = [
         callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '18:40',
         date: 'Сегодня, 18:40',
         secretaryDuration: '55 сек', callerPhone: '+7 925 117-44-02',
-        hasRecording: true, duration: '00:55',
+        hasRecording: true, duration: '00:55', favorite: true,
         topic: 'Спрашивала насчёт встречи завтра в 15:00, просит подтвердить',
         transcript: [
           { speaker: 'Секретарь', self: true, text: 'Здравствуйте, хозяин сейчас занят. Чем могу помочь?' },
@@ -514,6 +853,9 @@ const SECRETARY_LOG: { date: string; calls: CallEntry[] }[] = [
 function getFilteredLog(tab: FilterTab) {
   if (tab === 'Записи') return RECORDING_LOG
   if (tab === 'Секретарь') return SECRETARY_LOG
+  if (tab === 'Полезное') return CALL_LOG
+    .map(g => ({ ...g, calls: g.calls.filter(c => c.favorite) }))
+    .filter(g => g.calls.length > 0)
   return CALL_LOG
 }
 
@@ -642,6 +984,15 @@ function CallRow({ entry, onClick }: { entry: CallEntry; onClick?: () => void })
         <div className="flex justify-between items-center mb-0.5">
           <p className="font-sans text-[15px] font-semibold truncate" style={{ color: '#1D2023' }}>{entry.name}</p>
           <div className="flex items-center gap-1.5 shrink-0 ml-2">
+            {entry.noiseReduction && (
+              <div className="flex items-center gap-1 px-1.5 py-[3px] rounded-full" style={{ background: '#E5F9F8' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00C7BE" strokeWidth="2.2" strokeLinecap="round">
+                  <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+                  <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+                </svg>
+                <span className="font-sans font-bold text-[10px]" style={{ color: '#00C7BE' }}>HD</span>
+              </div>
+            )}
             {hasTranscript && (
               <div className="flex items-center gap-[2px] px-1.5 py-[3px] rounded-full" style={{ background: '#F0F0F7' }}>
                 <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
@@ -674,7 +1025,18 @@ function RecordingCard({ entry, onSummary }: { entry: CallEntry; onTranscript?: 
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-center mb-0.5">
           <p className="font-sans text-[15px] font-semibold truncate" style={{ color: '#1D2023' }}>{entry.name}</p>
-          <span className="font-compact text-[13px] shrink-0 ml-2" style={{ color: '#8D969F' }}>{entry.time}</span>
+          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+            {entry.noiseReduction && (
+              <div className="flex items-center gap-1 px-1.5 py-[3px] rounded-full" style={{ background: '#E5F9F8' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00C7BE" strokeWidth="2.2" strokeLinecap="round">
+                  <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+                  <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+                </svg>
+                <span className="font-sans font-bold text-[10px]" style={{ color: '#00C7BE' }}>HD</span>
+              </div>
+            )}
+            <span className="font-compact text-[13px]" style={{ color: '#8D969F' }}>{entry.time}</span>
+          </div>
         </div>
         <div className="flex items-center gap-1 mb-0.5">
           <CallTypeIcon callType={entry.callType}/>
@@ -734,6 +1096,7 @@ function TemplateBadge({ label, color, onSelect }: { label: string; color: strin
 // ─── Details screen ───────────────────────────────────────────────────────────
 
 function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBack: () => void; onTranscript: () => void }) {
+  const navigate = useNavigate()
   const [rating, setRating] = useState<'up' | 'down' | null>(null)
   const [tplLabel, setTplLabel] = useState(entry.summary?.tplLabel || 'Личный звонок')
   const [tplColor, setTplColor] = useState(entry.summary?.tplColor || '#34C759')
@@ -743,11 +1106,17 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
   const [showFeedback, setShowFeedback] = useState<'up' | 'down' | null>(null)
   const [selectedFeedback, setSelectedFeedback] = useState<string[]>([])
   const [reminderToast, setReminderToast] = useState(false)
+  const [noiseToast, setNoiseToast] = useState(false)
   const summary = entry.summary
 
   const showReminderToast = () => {
     setReminderToast(true)
     setTimeout(() => setReminderToast(false), 2500)
+  }
+
+  const showNoiseToast = () => {
+    setNoiseToast(true)
+    setTimeout(() => setNoiseToast(false), 2500)
   }
 
   const LIKE_OPTIONS = [
@@ -799,7 +1168,10 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
             </button>
             <CallAvatar entry={entry}/>
             <div className="flex-1 min-w-0">
-              <p className="font-sans font-bold text-base text-gray-900 truncate">{entry.name}</p>
+              <div className="flex items-center gap-1">
+                <p className="font-sans font-bold text-base text-gray-900 truncate">{entry.name}</p>
+                {entry.favorite && <span style={{ color: '#FFB800', fontSize: 14, lineHeight: 1, flexShrink: 0 }}>★</span>}
+              </div>
               <p className="font-compact font-normal text-xs text-gray-400">{PHONE_NUMBER}</p>
             </div>
             <button onClick={doShare} className="w-9 h-9 flex items-center justify-center shrink-0 rounded-xl" style={{ background: '#E8F2FF' }}>
@@ -811,7 +1183,18 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
               <MoreHorizontal size={20} className="text-gray-400" strokeWidth={2}/>
             </button>
           </div>
-          <p className="font-compact font-normal text-xs text-gray-400 mb-2 ml-1">{entry.date}</p>
+          <div className="flex items-center gap-2 mb-2 ml-1">
+            <p className="font-compact font-normal text-xs text-gray-400">{entry.date}</p>
+            {entry.noiseReduction && (
+              <button onClick={showNoiseToast} className="flex items-center gap-1 px-1.5 py-[3px] rounded-full active:opacity-70" style={{ background: '#E5F9F8' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00C7BE" strokeWidth="2.2" strokeLinecap="round">
+                  <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+                  <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+                </svg>
+                <span className="font-sans font-bold text-[10px]" style={{ color: '#00C7BE' }}>HD</span>
+              </button>
+            )}
+          </div>
           {!entry.notRecorded && (
             <div className="flex gap-2 mb-3">
               <button onClick={() => setShowPlayer(true)} className="flex items-center gap-2 bg-gray-100 rounded-xl px-4 py-2.5 active:bg-gray-200 transition-colors">
@@ -835,6 +1218,25 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-4 pt-4 pb-24 bg-gray-50">
+          {entry.hasRecording && !entry.noiseReduction && !entry.notRecorded && (
+            <button
+              onClick={() => navigate('/calls/noise-reduction-promo')}
+              className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 mb-3 text-left active:opacity-80 transition-opacity"
+              style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}
+            >
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#E5F9F8' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00C7BE" strokeWidth="2" strokeLinecap="round">
+                  <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+                  <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-compact font-semibold text-[14px]" style={{ color: '#1D2023' }}>Запись с шумом?</p>
+                <p className="font-compact text-[12px]" style={{ color: '#8D969F' }}>Шумоподавление уберёт посторонние звуки</p>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          )}
           {entry.notRecorded ? (
             <>
               {/* Service call hero card */}
@@ -1124,6 +1526,26 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
           )}
         </AnimatePresence>
 
+        {/* Noise reduction toast */}
+        <AnimatePresence>
+          {noiseToast && (
+            <motion.div
+              className="fixed bottom-24 left-0 right-0 flex justify-center z-50 px-5 pointer-events-none"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+              transition={{ type: 'spring', damping: 24, stiffness: 300 }}
+            >
+              <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl" style={{ background: '#1D2023', boxShadow: '0 4px 20px rgba(0,0,0,0.28)' }}>
+                <svg width="14" height="14" viewBox="0 0 9 9" fill="none">
+                  <rect x="0.5" y="3.5" width="1.5" height="3" rx="0.75" fill="#00C7BE"/>
+                  <rect x="3.75" y="1.5" width="1.5" height="6" rx="0.75" fill="#00C7BE"/>
+                  <rect x="7" y="2.5" width="1.5" height="4" rx="0.75" fill="#00C7BE"/>
+                </svg>
+                <span className="font-compact text-[14px] text-white">В звонке включалось Шумоподавление</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       </div>
     </div>
   )
@@ -1201,7 +1623,10 @@ function SecretaryScreen({ entry, onBack }: { entry: CallEntry; onBack: () => vo
             </button>
             <CallAvatar entry={entry}/>
             <div className="flex-1 min-w-0">
-              <p className="font-sans font-bold text-base text-gray-900 truncate">{entry.name}</p>
+              <div className="flex items-center gap-1">
+                <p className="font-sans font-bold text-base text-gray-900 truncate">{entry.name}</p>
+                {entry.favorite && <span style={{ color: '#FFB800', fontSize: 14, lineHeight: 1, flexShrink: 0 }}>★</span>}
+              </div>
               <p className="font-compact font-normal text-xs text-gray-400">{phone}</p>
             </div>
             <button onClick={doShare} className="w-9 h-9 flex items-center justify-center shrink-0 rounded-xl" style={{ background: '#E8F2FF' }}>
@@ -1400,6 +1825,12 @@ function IncomingDetailScreen({ entry, onBack }: { entry: CallEntry; onBack: () 
   const [showPlayer, setShowPlayer] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [noiseToast, setNoiseToast] = useState(false)
+
+  const showNoiseToast = () => {
+    setNoiseToast(true)
+    setTimeout(() => setNoiseToast(false), 2500)
+  }
 
   const doShare = () => {
     const text = entry.name
@@ -1457,7 +1888,18 @@ function IncomingDetailScreen({ entry, onBack }: { entry: CallEntry; onBack: () 
 
         {/* Call meta */}
         <div className="px-5 pt-2 pb-5 bg-white">
-          <p className="font-compact text-sm mb-1" style={{ color: '#8D969F' }}>Сегодня, {entry.time}</p>
+          <div className="flex items-center gap-2 mb-1">
+            <p className="font-compact text-sm" style={{ color: '#8D969F' }}>Сегодня, {entry.time}</p>
+            {entry.noiseReduction && (
+              <button onClick={showNoiseToast} className="flex items-center gap-1 px-1.5 py-[3px] rounded-full active:opacity-70" style={{ background: '#E5F9F8' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00C7BE" strokeWidth="2.2" strokeLinecap="round">
+                  <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+                  <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+                </svg>
+                <span className="font-sans font-bold text-[10px]" style={{ color: '#00C7BE' }}>HD</span>
+              </button>
+            )}
+          </div>
           <div className="flex items-center gap-2 mb-4">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 11.3a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" fill="#8390FF"/>
@@ -1652,6 +2094,26 @@ function IncomingDetailScreen({ entry, onBack }: { entry: CallEntry; onBack: () 
           )}
         </AnimatePresence>
 
+        {/* Noise reduction toast */}
+        <AnimatePresence>
+          {noiseToast && (
+            <motion.div
+              className="fixed bottom-24 left-0 right-0 flex justify-center z-50 px-5 pointer-events-none"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+              transition={{ type: 'spring', damping: 24, stiffness: 300 }}
+            >
+              <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl" style={{ background: '#1D2023', boxShadow: '0 4px 20px rgba(0,0,0,0.28)' }}>
+                <svg width="14" height="14" viewBox="0 0 9 9" fill="none">
+                  <rect x="0.5" y="3.5" width="1.5" height="3" rx="0.75" fill="#00C7BE"/>
+                  <rect x="3.75" y="1.5" width="1.5" height="6" rx="0.75" fill="#00C7BE"/>
+                  <rect x="7" y="2.5" width="1.5" height="4" rx="0.75" fill="#00C7BE"/>
+                </svg>
+                <span className="font-compact text-[14px] text-white">В звонке включалось Шумоподавление</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       </div>
     </div>
   )
@@ -1688,7 +2150,10 @@ function SafeDetailScreen({ entry, onBack }: { entry: CallEntry; onBack: () => v
             </div>
             <div className="min-w-0">
               <p className="font-sans font-semibold text-[15px] truncate" style={{ color: '#1D2023' }}>Возможно, мошенн…</p>
-              <p className="font-compact text-xs" style={{ color: '#8D969F' }}>{entry.name}</p>
+              <div className="flex items-center gap-1">
+                <p className="font-compact text-xs" style={{ color: '#8D969F' }}>{entry.name}</p>
+                {entry.favorite && <span style={{ color: '#FFB800', fontSize: 11, lineHeight: 1, flexShrink: 0 }}>★</span>}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -2150,6 +2615,7 @@ function BlockedDetailScreen({ entry, onBack }: { entry: CallEntry; onBack: () =
 
 const BANNERS: Record<FilterTab, { title: string; subtitle: string; icon: 'secretary' | 'voicemail' }> = {
   'Все':       { title: 'Секретарь+', subtitle: 'Всё нужное в одной подписке', icon: 'secretary' },
+  'Полезное':  { title: 'Секретарь+', subtitle: 'Всё нужное в одной подписке', icon: 'secretary' },
   'Записи':    { title: 'Шумоподавление', subtitle: 'ИИ в реальном времени уберёт из звонка посторонние звуки', icon: 'voicemail' },
   'Секретарь': { title: 'Интеллектуальная запись', subtitle: 'Запись и расшифровка звонков, краткие итоги разговоров', icon: 'voicemail' },
 }
@@ -2160,7 +2626,7 @@ const CONTACTS_DATA = [
   { name: 'Мама',           initials: 'МА', color: '#FF2D55',  phone: undefined,          lastCall: 'Сегодня, 09:56 · Исходящий' },
   { name: 'Марвин',         initials: 'МА', color: '#8390FF',  phone: undefined,          lastCall: '13 февраля, 18:04 · Исходящий' },
   { name: 'МТС',            initials: 'МТ', color: '#E30611',  phone: undefined,          lastCall: '12 февраля, 11:00 · Входящий' },
-  { name: 'Оля Баба',       initials: 'ОБ', color: '#7B8EC8',  phone: undefined,          lastCall: 'Вчера, 21:26 · Ответил Секретарь' },
+  { name: 'Бабушка',       initials: 'БА', color: '#7B8EC8',  phone: undefined,          lastCall: 'Вчера, 21:26 · Ответил Секретарь' },
   { name: '+7 925 878 98 76', initials: '78', color: '#8D969F', phone: '+7 925 878 98 76', lastCall: '13 февраля, 15:22 · Базовая защита' },
   { name: '+7 926 111-22-33', initials: '79', color: '#8D969F', phone: '+7 926 111-22-33', lastCall: '12 февраля, 14:30 · Исходящий' },
   { name: '+7 926 777 88 16', initials: '79', color: '#8D969F', phone: '+7 926 777 88 16', lastCall: 'Вчера, 18:45 · Безопасный звонок' },
@@ -2345,7 +2811,7 @@ export default function CallsToBe() {
             </div>
           </div>
           <div className="flex gap-2">
-            {(['Все', 'Записи', 'Секретарь'] as FilterTab[]).map(tab => (
+            {(['Все', 'Полезное', 'Записи', 'Секретарь'] as FilterTab[]).map(tab => (
               <button key={tab} onClick={() => { setActiveFilter(tab); setBannerVisible(true) }}
                 className="rounded-full px-4 py-1.5 font-compact font-semibold text-sm transition-colors"
                 style={{
@@ -2508,6 +2974,8 @@ export default function CallsToBe() {
                             entry.id === '7' ? () => { setDetailScreen('details'); setOpenEntry(entry) } :
                             entry.id === '8' ? () => setIncomingEntry(entry) :
                             entry.id === '9' ? () => { setDetailScreen('details'); setOpenEntry(entry) } :
+                            entry.callType === 'secretary' ? () => setSecretaryEntry(entry) :
+                            entry.hasRecording ? () => { setDetailScreen('details'); setOpenEntry(entry) } :
                             entry.callType === 'blocked' ? () => setBlockedEntry(entry) :
                             entry.callType === 'protected' ? () => setProtectedEntry(entry) :
                             entry.callType === 'safe' ? () => setSafeEntry(entry) :
