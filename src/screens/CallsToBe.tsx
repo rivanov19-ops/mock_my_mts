@@ -80,7 +80,7 @@ const CALL_LOG: { date: string; calls: CallEntry[] }[] = [
         id: 'r2', name: 'Товары и услуги',
         callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '21:35',
         date: 'Сегодня, 21:35 · Секретарь · 01:12',
-        secretaryIcon: true, hasRecording: true, duration: '01:12',
+        secretaryIcon: true, hasRecording: true, duration: '01:12', favorite: true,
         topic: 'Звонили по поводу доставки посылки, уточнили адрес',
         summary: {
           tplLabel: 'Сервисный / госорган', tplColor: '#8D969F',
@@ -119,7 +119,7 @@ const CALL_LOG: { date: string; calls: CallEntry[] }[] = [
         id: 'r3', name: 'Алёна Романова', initials: 'АР', initialsColor: '#7B8EC8',
         callType: 'incoming', typeLabel: 'Входящий', time: '19:01',
         date: 'Сегодня, 19:01 · Входящий · 06:44',
-        hasRecording: true, duration: '06:44', noiseReduction: true,
+        hasRecording: true, duration: '06:44', noiseReduction: true, favorite: true,
         topic: 'Обсудили правки по презентации, договорились созвониться в пятницу',
         summary: {
           tplLabel: 'Созвон с коллегами', tplColor: '#5856D6',
@@ -154,7 +154,7 @@ const CALL_LOG: { date: string; calls: CallEntry[] }[] = [
         callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '18:40',
         date: 'Сегодня, 18:40',
         secretaryIcon: true, secretaryDuration: '55 сек', callerPhone: '+7 925 117-44-02',
-        hasRecording: true, duration: '00:55', favorite: true,
+        hasRecording: true, duration: '00:55',
         topic: 'Спрашивала насчёт встречи завтра в 15:00, просит подтвердить',
         transcript: [
           { speaker: 'Секретарь', self: true, text: 'Здравствуйте, хозяин сейчас занят. Чем могу помочь?' },
@@ -207,7 +207,7 @@ const CALL_LOG: { date: string; calls: CallEntry[] }[] = [
         id: '2', name: 'Бабушка', initials: 'БА', initialsColor: '#7B8EC8',
         callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '21:26',
         date: 'Вчера, 21:26 · Секретарь · 02:40',
-        secretaryIcon: true, hasRecording: true, duration: '02:40',
+        secretaryIcon: true, hasRecording: true, duration: '02:40', favorite: true,
         topic: 'Просила передать маме, чтобы перезвонила',
         summary: {
           tplLabel: 'Личный звонок', tplColor: '#34C759',
@@ -250,7 +250,7 @@ const CALL_LOG: { date: string; calls: CallEntry[] }[] = [
         callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '20:05',
         date: '1 апреля, 20:05',
         secretaryIcon: true, secretaryDuration: '1 мин 10 сек', callerPhone: '+7 926 831-77-55',
-        hasRecording: true, duration: '01:10',
+        hasRecording: true, duration: '01:10', favorite: true,
         topic: 'Уточнял про ресторан завтра — нужно ли бронировать столик',
         transcript: [
           { speaker: 'Секретарь', self: true, text: 'Добрый вечер! Хозяин недоступен. Могу принять сообщение.' },
@@ -265,7 +265,7 @@ const CALL_LOG: { date: string; calls: CallEntry[] }[] = [
         id: 'r4', name: 'Иван Васильев', initials: 'ИВ', initialsColor: '#7B8EC8',
         callType: 'outgoing', typeLabel: 'Исходящий', time: '17:30',
         date: '1 апреля, 17:30 · Исходящий · 02:15',
-        hasRecording: true, duration: '02:15', favorite: true,
+        hasRecording: true, duration: '02:15',
         topic: 'Договорились пойти в ресторан Hite на Серпуховской',
         summary: {
           tplLabel: 'Личный звонок', tplColor: '#34C759',
@@ -312,7 +312,7 @@ const CALL_LOG: { date: string; calls: CallEntry[] }[] = [
         callType: 'secretary', typeLabel: 'Ответил Секретарь', time: '16:05',
         date: '31 марта, 16:05',
         secretaryIcon: true, secretaryDuration: '1 мин 20 сек', callerPhone: '+7 800 250-02-02',
-        hasRecording: true, duration: '01:20',
+        hasRecording: true, duration: '01:20', favorite: true,
         topic: 'Курьер не нашёл подъезд, ждёт 10 минут у первого входа',
         transcript: [
           { speaker: 'Секретарь', self: true, text: 'Добрый день! Хозяин недоступен. Слушаю вас.' },
@@ -537,7 +537,7 @@ const RECORDING_LOG: { date: string; calls: CallEntry[] }[] = [
         id: 'r3', name: 'Алёна Романова', initials: 'АР', initialsColor: '#7B8EC8',
         callType: 'incoming', typeLabel: 'Входящий', time: '19:01',
         date: 'Сегодня, 19:01 · Входящий · 06:44',
-        hasRecording: true, duration: '06:44',
+        hasRecording: true, duration: '06:44', favorite: true,
         topic: 'Обсудили правки по презентации, договорились созвониться в пятницу',
         summary: {
           tplLabel: 'Созвон с коллегами', tplColor: '#5856D6',
@@ -583,7 +583,7 @@ const RECORDING_LOG: { date: string; calls: CallEntry[] }[] = [
         id: 'r4', name: 'Иван Васильев', initials: 'ИВ', initialsColor: '#7B8EC8',
         callType: 'outgoing', typeLabel: 'Исходящий', time: '17:30',
         date: '1 апреля, 17:30 · Исходящий · 02:15',
-        hasRecording: true, duration: '02:15', favorite: true,
+        hasRecording: true, duration: '02:15',
         topic: 'Договорились пойти в ресторан Hite на Серпуховской',
         summary: {
           tplLabel: 'Личный звонок', tplColor: '#34C759',
