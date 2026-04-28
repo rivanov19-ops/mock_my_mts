@@ -1095,7 +1095,7 @@ function TemplateBadge({ label, color, onSelect }: { label: string; color: strin
 
 // ─── Details screen ───────────────────────────────────────────────────────────
 
-function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBack: () => void; onTranscript: () => void }) {
+function DetailsScreen({ entry, onBack, onTranscript, summaryState = 'visible' }: { entry: CallEntry; onBack: () => void; onTranscript: () => void; summaryState?: 'hidden' | 'loading' | 'visible' }) {
   const navigate = useNavigate()
   const [rating, setRating] = useState<'up' | 'down' | null>(null)
   const [tplLabel, setTplLabel] = useState(entry.summary?.tplLabel || 'Личный звонок')
@@ -1296,6 +1296,12 @@ function DetailsScreen({ entry, onBack, onTranscript }: { entry: CallEntry; onBa
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
               </button>
             </>
+          ) : summaryState === 'hidden' ? (
+            <div className="py-16"/>
+          ) : summaryState === 'loading' ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-gray-500 animate-spin"/>
+            </div>
           ) : summary ? (
             <>
               <div className="flex items-center justify-between mb-3">
@@ -2626,12 +2632,17 @@ const CONTACTS_DATA = [
   { name: 'Мама',           initials: 'МА', color: '#FF2D55',  phone: undefined,          lastCall: 'Сегодня, 09:56 · Исходящий' },
   { name: 'Марвин',         initials: 'МА', color: '#8390FF',  phone: undefined,          lastCall: '13 февраля, 18:04 · Исходящий' },
   { name: 'МТС',            initials: 'МТ', color: '#E30611',  phone: undefined,          lastCall: '12 февраля, 11:00 · Входящий' },
-  { name: 'Бабушка',       initials: 'БА', color: '#7B8EC8',  phone: undefined,          lastCall: 'Вчера, 21:26 · Ответил Секретарь' },
+  { name: 'Бабушка',        initials: 'БА', color: '#7B8EC8',  phone: undefined,          lastCall: 'Вчера, 21:26 · Ответил Секретарь' },
+  { name: 'Алёна Романова', initials: 'АР', color: '#7B8EC8',  phone: undefined,          lastCall: 'Сегодня, 19:01 · Входящий' },
+  { name: 'Иван Васильев',  initials: 'ИВ', color: '#7B8EC8',  phone: undefined,          lastCall: '1 апреля, 20:05 · Ответил Секретарь' },
+  { name: 'Курьер Ozon',    initials: 'OZ', color: '#0070E5',  phone: undefined,          lastCall: '31 марта, 16:05 · Ответил Секретарь' },
+  { name: 'Яндекс Еда',     initials: 'ЯЕ', color: '#FF2D55',  phone: undefined,          lastCall: '31 марта, 13:15 · Входящий' },
   { name: '+7 925 878 98 76', initials: '78', color: '#8D969F', phone: '+7 925 878 98 76', lastCall: '13 февраля, 15:22 · Базовая защита' },
   { name: '+7 926 111-22-33', initials: '79', color: '#8D969F', phone: '+7 926 111-22-33', lastCall: '12 февраля, 14:30 · Исходящий' },
+  { name: '+7 926 555 33 11', initials: '79', color: '#8D969F', phone: '+7 926 555 33 11', lastCall: '29 марта, 19:30 · Ответил Секретарь' },
   { name: '+7 926 777 88 16', initials: '79', color: '#8D969F', phone: '+7 926 777 88 16', lastCall: 'Вчера, 18:45 · Безопасный звонок' },
   { name: '+7 989 777 88 11', initials: '79', color: '#8D969F', phone: '+7 989 777 88 11', lastCall: '12 февраля, 17:33 · Ответил Защитник' },
-  { name: '3620',             initials: '36', color: '#8D969F', phone: '3620',             lastCall: '13 февраля, 18:01 · Исходящий' },
+  { name: '3620',             initials: '36', color: '#8D969F', phone: '3620',             lastCall: 'Сегодня, 14:22 · Исходящий' },
 ]
 
 function avatarGradientForContact(color: string) {
@@ -2736,6 +2747,7 @@ export default function CallsToBe() {
   const [detailScreen, setDetailScreen] = useState<DetailScreen>('details')
   const [alertVisible, setAlertVisible] = useState(true)
   const [alertModalOpen, setAlertModalOpen] = useState(false)
+  const [r4Phase, setR4Phase] = useState<'idle' | 'modal' | 'spinning' | 'ready'>('idle')
   const [secretaryEntry, setSecretaryEntry] = useState<CallEntry | null>(null)
   const [blockedEntry, setBlockedEntry] = useState<CallEntry | null>(null)
   const [protectedEntry, setProtectedEntry] = useState<CallEntry | null>(null)
@@ -2767,7 +2779,56 @@ export default function CallsToBe() {
     return <TranscriptScreen entry={openEntry} onBack={() => setDetailScreen('details')}/>
   }
   if (openEntry) {
-    return <DetailsScreen entry={openEntry} onBack={() => setOpenEntry(null)} onTranscript={() => setDetailScreen('transcript')}/>
+    const summaryState: 'hidden' | 'loading' | 'visible' = openEntry.id === 'r4'
+      ? (r4Phase === 'modal' ? 'hidden' : r4Phase === 'spinning' ? 'loading' : 'visible')
+      : 'visible'
+    return (
+      <>
+        <DetailsScreen
+          entry={openEntry}
+          summaryState={summaryState}
+          onBack={() => { setOpenEntry(null); setR4Phase('idle') }}
+          onTranscript={() => setDetailScreen('transcript')}
+        />
+        <AnimatePresence>
+          {openEntry.id === 'r4' && r4Phase === 'modal' && (
+            <motion.div className="fixed inset-0 z-50 flex items-center justify-center px-5"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="absolute inset-0 bg-black/30" onClick={() => { setOpenEntry(null); setR4Phase('idle') }}/>
+              <motion.div className="relative w-full max-w-sm"
+                initial={{ scale: 0.93, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.93, opacity: 0 }}
+                transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+                style={{ borderRadius: 20, background: 'white', boxShadow: '0 8px 40px rgba(0,0,0,0.18)', padding: '20px 20px 16px' }}>
+                <button onClick={() => { setOpenEntry(null); setR4Phase('idle') }}
+                  className="absolute top-3 right-3 flex items-center justify-center active:opacity-60"
+                  style={{ width: 28, height: 28 }}>
+                  <X size={15} strokeWidth={2.2} style={{ color: '#1D2023', opacity: 0.35 }}/>
+                </button>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center justify-center rounded-[10px] shrink-0"
+                    style={{ width: 36, height: 36, background: 'rgba(251,191,36,0.15)' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                  </div>
+                  <p className="font-sans font-bold text-[16px]" style={{ color: '#1D2023' }}>Задержка расшифровок</p>
+                </div>
+                <div className="rounded-xl px-4 py-3 mb-5" style={{ background: '#F2F3F7' }}>
+                  <p className="font-compact text-[14px] leading-relaxed" style={{ color: '#1D2023' }}>
+                    Из-за повышенной нагрузки расшифровки некоторых звонков могут появляться в течение 20–30 минут вместо обычных 15 секунд. Записи сохраняются — расшифровки появятся автоматически, как только нагрузка снизится.
+                  </p>
+                </div>
+                <button onClick={() => { setR4Phase('spinning'); setTimeout(() => setR4Phase('ready'), 1000) }}
+                  className="w-full rounded-2xl py-3.5 font-sans font-bold text-[16px] text-white active:opacity-85 transition-opacity"
+                  style={{ background: '#1D2023' }}>
+                  Понятно
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </>
+    )
   }
 
   const banner = BANNERS[activeFilter]
@@ -2975,6 +3036,7 @@ export default function CallsToBe() {
                             entry.id === '8' ? () => setIncomingEntry(entry) :
                             entry.id === '9' ? () => { setDetailScreen('details'); setOpenEntry(entry) } :
                             entry.callType === 'secretary' ? () => setSecretaryEntry(entry) :
+                            entry.id === 'r4' ? () => { setOpenEntry(entry); setDetailScreen('details'); setR4Phase('modal') } :
                             entry.hasRecording ? () => { setDetailScreen('details'); setOpenEntry(entry) } :
                             entry.callType === 'blocked' ? () => setBlockedEntry(entry) :
                             entry.callType === 'protected' ? () => setProtectedEntry(entry) :
