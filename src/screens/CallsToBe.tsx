@@ -1629,6 +1629,7 @@ function SecretaryScreen({ entry, onBack }: { entry: CallEntry; onBack: () => vo
   const [isPlaying, setIsPlaying] = useState(false)
   const [showPlayer, setShowPlayer] = useState(false)
   const [bannerDismissed, setBannerDismissed] = useState(false)
+  const [favoriteToast, setFavoriteToast] = useState(false)
 
   const phone = entry.callerPhone || (entry.initials ? '+7 ··· ···-··-··' : entry.name)
 
@@ -1652,7 +1653,7 @@ function SecretaryScreen({ entry, onBack }: { entry: CallEntry; onBack: () => vo
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1">
                 <p className="font-sans font-bold text-base text-gray-900 truncate">{entry.name}</p>
-                {entry.favorite && <span style={{ color: '#FFB800', fontSize: 14, lineHeight: 1, flexShrink: 0 }}>★</span>}
+                {entry.favorite && <button onClick={() => { setFavoriteToast(true); setTimeout(() => setFavoriteToast(false), 2500) }} style={{ color: '#FFB800', fontSize: 14, lineHeight: 1, flexShrink: 0 }} className="active:opacity-60">★</button>}
               </div>
               <p className="font-compact font-normal text-xs text-gray-400">{phone}</p>
             </div>
@@ -1834,6 +1835,26 @@ function SecretaryScreen({ entry, onBack }: { entry: CallEntry; onBack: () => vo
                   </div>
                 </div>
               </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Favorite toast */}
+        <AnimatePresence>
+          {favoriteToast && (
+            <motion.div
+              className="fixed bottom-24 left-0 right-0 flex justify-center z-50 px-5 pointer-events-none"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+              transition={{ type: 'spring', damping: 24, stiffness: 300 }}
+            >
+              <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl" style={{ background: '#1D2023', boxShadow: '0 4px 20px rgba(0,0,0,0.28)' }}>
+                <div className="w-5 h-5 rounded-full bg-[#FFB800] flex items-center justify-center shrink-0">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M2 5l2.5 2.5 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <span className="font-compact text-[14px] text-white">Звонок добавлен в Полезное</span>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -2152,6 +2173,7 @@ function SafeDetailScreen({ entry, onBack }: { entry: CallEntry; onBack: () => v
   const [showPlayer, setShowPlayer] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [favoriteToast, setFavoriteToast] = useState(false)
   const doShare = async () => {
     try { await navigator.share({ title: entry.name, text: `Звонок от ${entry.name}` }) } catch { /* cancelled */ }
   }
@@ -2179,7 +2201,7 @@ function SafeDetailScreen({ entry, onBack }: { entry: CallEntry; onBack: () => v
               <p className="font-sans font-semibold text-[15px] truncate" style={{ color: '#1D2023' }}>Возможно, мошенн…</p>
               <div className="flex items-center gap-1">
                 <p className="font-compact text-xs" style={{ color: '#8D969F' }}>{entry.name}</p>
-                {entry.favorite && <span style={{ color: '#FFB800', fontSize: 11, lineHeight: 1, flexShrink: 0 }}>★</span>}
+                {entry.favorite && <button onClick={() => { setFavoriteToast(true); setTimeout(() => setFavoriteToast(false), 2500) }} style={{ color: '#FFB800', fontSize: 11, lineHeight: 1, flexShrink: 0 }} className="active:opacity-60">★</button>}
               </div>
             </div>
           </div>
@@ -2330,6 +2352,26 @@ function SafeDetailScreen({ entry, onBack }: { entry: CallEntry; onBack: () => v
                   </button>
                 </div>
               </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Favorite toast */}
+        <AnimatePresence>
+          {favoriteToast && (
+            <motion.div
+              className="fixed bottom-24 left-0 right-0 flex justify-center z-50 px-5 pointer-events-none"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+              transition={{ type: 'spring', damping: 24, stiffness: 300 }}
+            >
+              <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl" style={{ background: '#1D2023', boxShadow: '0 4px 20px rgba(0,0,0,0.28)' }}>
+                <div className="w-5 h-5 rounded-full bg-[#FFB800] flex items-center justify-center shrink-0">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M2 5l2.5 2.5 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <span className="font-compact text-[14px] text-white">Звонок добавлен в Полезное</span>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
