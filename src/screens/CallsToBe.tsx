@@ -1107,6 +1107,7 @@ function DetailsScreen({ entry, onBack, onTranscript, summaryState = 'visible' }
   const [selectedFeedback, setSelectedFeedback] = useState<string[]>([])
   const [reminderToast, setReminderToast] = useState(false)
   const [noiseToast, setNoiseToast] = useState(false)
+  const [favoriteToast, setFavoriteToast] = useState(false)
   const summary = entry.summary
 
   const showReminderToast = () => {
@@ -1170,7 +1171,7 @@ function DetailsScreen({ entry, onBack, onTranscript, summaryState = 'visible' }
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1">
                 <p className="font-sans font-bold text-base text-gray-900 truncate">{entry.name}</p>
-                {entry.favorite && <span style={{ color: '#FFB800', fontSize: 14, lineHeight: 1, flexShrink: 0 }}>★</span>}
+                {entry.favorite && <button onClick={() => { setFavoriteToast(true); setTimeout(() => setFavoriteToast(false), 2500) }} style={{ color: '#FFB800', fontSize: 14, lineHeight: 1, flexShrink: 0 }} className="active:opacity-60">★</button>}
               </div>
               <p className="font-compact font-normal text-xs text-gray-400">{PHONE_NUMBER}</p>
             </div>
@@ -1547,6 +1548,26 @@ function DetailsScreen({ entry, onBack, onTranscript, summaryState = 'visible' }
                   <rect x="7" y="2.5" width="1.5" height="4" rx="0.75" fill="#00C7BE"/>
                 </svg>
                 <span className="font-compact text-[14px] text-white">В звонке включалось Шумоподавление</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Favorite toast */}
+        <AnimatePresence>
+          {favoriteToast && (
+            <motion.div
+              className="fixed bottom-24 left-0 right-0 flex justify-center z-50 px-5 pointer-events-none"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+              transition={{ type: 'spring', damping: 24, stiffness: 300 }}
+            >
+              <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl" style={{ background: '#1D2023', boxShadow: '0 4px 20px rgba(0,0,0,0.28)' }}>
+                <div className="w-5 h-5 rounded-full bg-[#FFB800] flex items-center justify-center shrink-0">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M2 5l2.5 2.5 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <span className="font-compact text-[14px] text-white">Звонок добавлен в Полезное</span>
               </div>
             </motion.div>
           )}
