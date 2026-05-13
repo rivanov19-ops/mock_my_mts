@@ -36,6 +36,7 @@ interface CallEntry {
   secretaryIcon?: boolean
   hasRecording?: boolean
   notRecorded?: boolean
+  adCall?: boolean
   duration?: string
   secretaryDuration?: string
   callerPhone?: string
@@ -55,7 +56,7 @@ const CALL_LOG: { date: string; calls: CallEntry[] }[] = [
         id: 'r1', name: 'Реклама и опросы',
         callType: 'incoming', typeLabel: 'Входящий', time: '22:22',
         date: 'Сегодня, 22:22 · Входящий · 01:45',
-        hasRecording: true, duration: '01:45',
+        hasRecording: true, duration: '01:45', adCall: true,
         topic: 'Предложили участие в опросе по качеству связи, отказался',
         summary: {
           tplLabel: 'Сервисный / госорган', tplColor: '#8D969F',
@@ -488,7 +489,7 @@ const RECORDING_LOG: { date: string; calls: CallEntry[] }[] = [
         id: 'r1', name: 'Реклама и опросы',
         callType: 'incoming', typeLabel: 'Входящий', time: '22:22',
         date: 'Сегодня, 22:22 · Входящий · 01:45',
-        hasRecording: true, duration: '01:45',
+        hasRecording: true, duration: '01:45', adCall: true,
         topic: 'Предложили участие в опросе по качеству связи, отказался',
         summary: {
           tplLabel: 'Сервисный / госорган', tplColor: '#8D969F',
@@ -1108,6 +1109,9 @@ function DetailsScreen({ entry, onBack, onTranscript, summaryState = 'visible' }
   const [reminderToast, setReminderToast] = useState(false)
   const [noiseToast, setNoiseToast] = useState(false)
   const [favoriteToast, setFavoriteToast] = useState(false)
+  const [showNoteModal, setShowNoteModal] = useState(false)
+  const [noteDraft, setNoteDraft] = useState('')
+  const [savedNote, setSavedNote] = useState('')
   const summary = entry.summary
 
   const showReminderToast = () => {
@@ -1219,7 +1223,7 @@ function DetailsScreen({ entry, onBack, onTranscript, summaryState = 'visible' }
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-4 pt-4 pb-24 bg-gray-50">
-          {entry.hasRecording && !entry.noiseReduction && !entry.notRecorded && (
+          {entry.hasRecording && !entry.noiseReduction && !entry.notRecorded && !entry.adCall && (
             <button
               onClick={() => navigate('/calls/noise-reduction-promo')}
               className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 mb-3 text-left active:opacity-80 transition-opacity"
@@ -1237,6 +1241,52 @@ function DetailsScreen({ entry, onBack, onTranscript, summaryState = 'visible' }
               </div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
+          )}
+          {entry.adCall && (
+            <>
+              <div className="flex gap-2 mb-3">
+                <button className="flex-1 flex items-center gap-2 bg-white rounded-2xl px-4 py-3.5 active:opacity-80 transition-opacity" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8D969F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                  <span className="font-compact text-[14px]" style={{ color: '#1D2023' }}>В полезное</span>
+                </button>
+                <button
+                  onClick={() => { setNoteDraft(savedNote); setShowNoteModal(true) }}
+                  className="flex-1 flex items-center gap-2 bg-white rounded-2xl px-4 py-3.5 active:opacity-80 transition-opacity"
+                  style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}
+                >
+                  {savedNote ? (
+                    <>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8D969F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                      <span className="font-compact text-[14px]" style={{ color: '#1D2023' }}>Редактировать</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8D969F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                      </svg>
+                      <span className="font-compact text-[14px]" style={{ color: '#1D2023' }}>Заметка</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              {savedNote && (
+                <div className="bg-white rounded-2xl overflow-hidden mb-3" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
+                  <div className="px-4 py-3.5">
+                    <p className="font-compact text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#8D969F' }}>Заметка</p>
+                    <p className="font-compact text-[14px] leading-relaxed" style={{ color: '#1D2023' }}>{savedNote}</p>
+                  </div>
+                </div>
+              )}
+            </>
           )}
           {entry.notRecorded ? (
             <>
@@ -1549,6 +1599,60 @@ function DetailsScreen({ entry, onBack, onTranscript, summaryState = 'visible' }
                 </svg>
                 <span className="font-compact text-[14px] text-white">В звонке включалось Шумоподавление</span>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Note modal */}
+        <AnimatePresence>
+          {showNoteModal && (
+            <motion.div className="fixed inset-0 z-50 flex items-end justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="absolute inset-0 bg-black/20" onClick={() => setShowNoteModal(false)}/>
+              <motion.div
+                className="relative w-full max-w-app bg-white rounded-t-[24px] overflow-hidden"
+                initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              >
+                <div className="flex justify-center pt-2 pb-1"><div className="w-10 h-1 rounded-full bg-gray-200"/></div>
+                <div className="px-5 pt-3 pb-10">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="font-sans font-bold text-[17px]" style={{ color: '#1D2023' }}>
+                      {savedNote ? 'Заметка' : 'Создать заметку'}
+                    </p>
+                    <button
+                      onClick={() => setShowNoteModal(false)}
+                      className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100"
+                      style={{ background: '#F2F3F7' }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M1 1L11 11M11 1L1 11" stroke="#8D969F" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <p className="font-compact text-[13px] mb-4" style={{ color: '#8D969F' }}>Дополните звонок своим комментарием</p>
+                  <textarea
+                    value={noteDraft}
+                    onChange={e => setNoteDraft(e.target.value)}
+                    placeholder="Заметка"
+                    autoFocus
+                    rows={3}
+                    className="w-full rounded-xl px-4 py-3 font-compact text-[15px] resize-none outline-none"
+                    style={{ border: '1.5px solid #007AFF', color: '#1D2023', background: 'white', minHeight: 88 }}
+                  />
+                  <button
+                    disabled={!noteDraft.trim()}
+                    onClick={() => { setSavedNote(noteDraft.trim()); setShowNoteModal(false) }}
+                    className="w-full mt-4 py-4 rounded-2xl font-sans font-bold text-[15px] transition-colors"
+                    style={{
+                      background: noteDraft.trim() ? '#1D2023' : '#F2F3F7',
+                      color: noteDraft.trim() ? 'white' : '#C7CFD4',
+                      letterSpacing: '0.06em'
+                    }}
+                  >
+                    СОХРАНИТЬ
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
