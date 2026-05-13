@@ -1279,12 +1279,16 @@ function DetailsScreen({ entry, onBack, onTranscript, summaryState = 'visible' }
                 </button>
               </div>
               {savedNote && (
-                <div className="bg-white rounded-2xl overflow-hidden mb-3" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
+                <button
+                  onClick={() => { setNoteDraft(savedNote); setShowNoteModal(true) }}
+                  className="w-full bg-white rounded-2xl overflow-hidden mb-3 text-left active:opacity-80 transition-opacity"
+                  style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}
+                >
                   <div className="px-4 py-3.5">
                     <p className="font-compact text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#8D969F' }}>Заметка</p>
                     <p className="font-compact text-[14px] leading-relaxed" style={{ color: '#1D2023' }}>{savedNote}</p>
                   </div>
-                </div>
+                </button>
               )}
             </>
           )}
@@ -1651,6 +1655,15 @@ function DetailsScreen({ entry, onBack, onTranscript, summaryState = 'visible' }
                   >
                     СОХРАНИТЬ
                   </button>
+                  {savedNote && (
+                    <button
+                      onClick={() => { setSavedNote(''); setShowNoteModal(false) }}
+                      className="w-full mt-3 py-3 font-sans font-bold text-[15px] tracking-wider"
+                      style={{ color: '#FF3B30', letterSpacing: '0.06em' }}
+                    >
+                      УДАЛИТЬ
+                    </button>
+                  )}
                 </div>
               </motion.div>
             </motion.div>
