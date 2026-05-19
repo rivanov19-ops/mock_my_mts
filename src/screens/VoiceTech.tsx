@@ -245,8 +245,8 @@ function TranscriptScreen({ call, onBack }: { call: CallEntry; onBack: () => voi
             <div className="bg-gray-50 rounded-2xl p-4 flex flex-col gap-4 mb-3">
               <div className="flex items-center gap-4">
                 <div className="flex-1">
-                  <p className="font-sans font-bold text-base text-gray-900">В МТС со своим номером</p>
-                  <p className="font-compact font-normal text-sm text-gray-400 mt-0.5">Оформите документы онлайн</p>
+                  <p className="font-sans font-bold text-base text-gray-900">Подключите VoiceTech</p>
+                  <p className="font-compact font-normal text-sm text-gray-400 mt-0.5">Оцените AI Звонки</p>
                 </div>
                 <div
                   className="w-14 h-16 rounded-xl shrink-0 flex items-center justify-center"
@@ -264,8 +264,11 @@ function TranscriptScreen({ call, onBack }: { call: CallEntry; onBack: () => voi
                   </svg>
                 </div>
               </div>
-              <button className="w-full bg-white border border-gray-200 rounded-full py-3.5 font-sans font-bold text-sm text-gray-900 uppercase tracking-widest hover:bg-gray-50 transition-colors">
-                Перенести номер
+              <button
+                className="w-full bg-white border border-gray-200 rounded-full py-3.5 font-sans font-bold text-sm text-gray-900 uppercase tracking-widest hover:bg-gray-50 transition-colors"
+                onClick={() => window.open('https://moskva.mts.ru/personal/mobilnaya-svyaz/uslugi/mobilnaya-svyaz/voicetech', '_blank')}
+              >
+                Попробовать
               </button>
             </div>
 
@@ -589,8 +592,8 @@ function LoadingScreen({ call, onBack, onReady }: { call: CallEntry; onBack: () 
           <div className="bg-gray-50 rounded-2xl p-4 flex flex-col gap-4 mb-3">
             <div className="flex items-center gap-4">
               <div className="flex-1">
-                <p className="font-sans font-bold text-base text-gray-900">В МТС со своим номером</p>
-                <p className="font-compact font-normal text-sm text-gray-400 mt-0.5">Оформите документы онлайн</p>
+                <p className="font-sans font-bold text-base text-gray-900">Подключите VoiceTech</p>
+                <p className="font-compact font-normal text-sm text-gray-400 mt-0.5">Оцените AI Звонки</p>
               </div>
               <div className="w-14 h-16 rounded-xl shrink-0 flex items-center justify-center" style={{ background: 'linear-gradient(160deg, #D0D4F0, #B8BEEA)' }}>
                 <svg width="30" height="36" viewBox="0 0 30 36" fill="none">
@@ -604,8 +607,11 @@ function LoadingScreen({ call, onBack, onReady }: { call: CallEntry; onBack: () 
                 </svg>
               </div>
             </div>
-            <button className="w-full bg-white border border-gray-200 rounded-full py-3.5 font-sans font-bold text-sm text-gray-900 uppercase tracking-widest">
-              Перенести номер
+            <button
+              className="w-full bg-white border border-gray-200 rounded-full py-3.5 font-sans font-bold text-sm text-gray-900 uppercase tracking-widest"
+              onClick={() => window.open('https://moskva.mts.ru/personal/mobilnaya-svyaz/uslugi/mobilnaya-svyaz/voicetech', '_blank')}
+            >
+              Попробовать
             </button>
           </div>
 
@@ -698,8 +704,8 @@ export default function VoiceTech() {
             <div className="bg-white rounded-2xl p-4 flex flex-col gap-4" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
               <div className="flex items-center gap-4">
                 <div className="flex-1">
-                  <p className="font-sans font-bold text-base text-gray-900">В МТС со своим номером</p>
-                  <p className="font-compact font-normal text-sm text-gray-400 mt-0.5">Оформите документы онлайн</p>
+                  <p className="font-sans font-bold text-base text-gray-900">Подключите VoiceTech</p>
+                  <p className="font-compact font-normal text-sm text-gray-400 mt-0.5">Оцените AI Звонки</p>
                 </div>
                 <div className="w-14 h-16 rounded-xl shrink-0 flex items-center justify-center" style={{ background: 'linear-gradient(160deg, #D0D4F0, #B8BEEA)' }}>
                   <svg width="30" height="36" viewBox="0 0 30 36" fill="none">
@@ -713,8 +719,11 @@ export default function VoiceTech() {
                   </svg>
                 </div>
               </div>
-              <button className="w-full bg-gray-100 rounded-full py-3.5 font-sans font-bold text-sm text-gray-900 uppercase tracking-widest hover:bg-gray-200 transition-colors">
-                Перенести номер
+              <button
+                className="w-full bg-gray-100 rounded-full py-3.5 font-sans font-bold text-sm text-gray-900 uppercase tracking-widest hover:bg-gray-200 transition-colors"
+                onClick={() => window.open('https://moskva.mts.ru/personal/mobilnaya-svyaz/uslugi/mobilnaya-svyaz/voicetech', '_blank')}
+              >
+                Попробовать
               </button>
             </div>
 

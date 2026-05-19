@@ -1041,7 +1041,13 @@ function RecordingCard({ entry, onSummary }: { entry: CallEntry; onTranscript?: 
         </div>
         <div className="flex items-center gap-1 mb-0.5">
           <CallTypeIcon callType={entry.callType}/>
-          <p className="font-compact text-[12px]" style={{ color: '#8D969F' }}>{entry.typeLabel}</p>
+          <p className="font-compact text-[12px]" style={{ color: '#8D969F' }}>
+            {entry.typeLabel}
+            {entry.callType === 'secretary' && entry.transcript && (() => {
+              const count = entry.transcript.filter(m => m.self).length
+              return count > 0 ? ` · ${count} ${count === 1 ? 'фраза' : count < 5 ? 'фразы' : 'фраз'}` : null
+            })()}
+          </p>
         </div>
         {entry.topic && (
           <p className="font-compact text-[13px] leading-snug line-clamp-2" style={{ color: '#1D2023' }}>{entry.topic}</p>
@@ -3033,7 +3039,7 @@ export default function CallsToBe() {
             </div>
             <div className="flex items-center gap-2 mt-1">
               <button onClick={() => navigate('/calls')} className="flex items-center active:opacity-50 transition-opacity">
-                <span className="font-compact text-xs underline underline-offset-2" style={{ color: 'rgba(29,32,35,0.35)' }}>AsIs</span>
+                <span className="font-compact text-xs underline underline-offset-2" style={{ color: 'rgba(29,32,35,0.35)' }}>NEW</span>
               </button>
               <button onClick={() => navigate('/calls/catalog')} className="h-9 px-4 rounded-full flex items-center justify-center active:opacity-70 transition-opacity" style={{ background: 'rgba(29,32,35,0.07)' }}>
                 <span className="font-sans font-bold text-xs uppercase tracking-wide" style={{ color: '#1D2023' }}>Каталог</span>

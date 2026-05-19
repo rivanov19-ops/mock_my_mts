@@ -129,10 +129,10 @@ export default function Dashboard() {
               <div className="flex items-start gap-4 mb-5">
                 <div className="flex-1">
                   <p className="font-sans font-bold text-base text-gray-900 mb-1">
-                    В МТС со своим номером
+                    Подключите VoiceTech
                   </p>
                   <p className="font-compact font-normal text-sm text-gray-500">
-                    Оформите документы онлайн
+                    Оцените AI Звонки
                   </p>
                 </div>
                 <div
@@ -142,8 +142,11 @@ export default function Dashboard() {
                   <Smartphone size={28} className="text-blue-400" strokeWidth={1.5} />
                 </div>
               </div>
-              <button className="w-full border border-gray-200 rounded-full py-3.5 font-sans font-bold text-sm text-gray-900 uppercase tracking-widest hover:bg-gray-50 transition-colors">
-                Перенести номер
+              <button
+                className="w-full border border-gray-200 rounded-full py-3.5 font-sans font-bold text-sm text-gray-900 uppercase tracking-widest hover:bg-gray-50 transition-colors"
+                onClick={() => window.open('https://moskva.mts.ru/personal/mobilnaya-svyaz/uslugi/mobilnaya-svyaz/voicetech', '_blank')}
+              >
+                Попробовать
               </button>
             </div>
           </div>
