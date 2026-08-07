@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, ChevronRight, CheckCircle, Crown, Users, Smartphone, Tv, Home, PhoneCall } from 'lucide-react'
+import { Bell, ChevronRight, CheckCircle, Users, Smartphone, Tv, Home, PhoneCall } from 'lucide-react'
 import { BottomNav } from '../components/layout/BottomNav'
+import { PhoneSwitcherSheet, ACCOUNT_ICONS, ACCOUNT_ICON_BG, type PhoneAccount } from '../components/ui/PhoneSwitcherSheet'
+import { useAccount } from '../core/account-context'
 import mock from '../core/data/mock'
 
 // ─── Promo cards ─────────────────────────────────────────────────────────────
@@ -36,14 +38,23 @@ export default function Dashboard() {
   const location   = useLocation()
   const navigate   = useNavigate()
   const statePhone = (location.state as { phone?: string } | null)?.phone
-  const phone      = statePhone ?? mock.user.phone
+  const { account, selectAccount } = useAccount()
   const [showToast, setShowToast] = useState(!!statePhone)
+  const [switcherOpen, setSwitcherOpen] = useState(false)
+
+  const phone = (statePhone && account.id === 'main' ? statePhone : account.phone) ?? mock.user.phone
+  const AccountIcon = ACCOUNT_ICONS[account.icon]
 
   useEffect(() => {
     if (!showToast) return
     const id = setTimeout(() => setShowToast(false), 3000)
     return () => clearTimeout(id)
   }, [showToast])
+
+  function handleSelectAccount(acc: PhoneAccount) {
+    selectAccount(acc)
+    setSwitcherOpen(false)
+  }
 
   return (
     <div className="min-h-screen bg-mts-surface flex justify-center">
@@ -52,16 +63,22 @@ export default function Dashboard() {
         {/* ── Top bar ── */}
         <div className="px-4 pt-4 pb-3 flex items-center gap-3 bg-mts-surface">
 
-          {/* Account icon */}
-          <div className="w-12 h-12 rounded-2xl bg-blue-500 flex items-center justify-center shrink-0">
-            <Crown size={22} color="white" strokeWidth={2} />
-          </div>
-
-          {/* Account info */}
-          <div className="flex-1 min-w-0">
-            <p className="font-compact font-normal text-xs text-gray-500">Основной номер</p>
-            <p className="font-sans font-bold text-sm text-gray-900 truncate">{phone}</p>
-          </div>
+          {/* Account (tap to switch number) */}
+          <button
+            onClick={() => setSwitcherOpen(true)}
+            className="flex items-center gap-3 flex-1 min-w-0 active:opacity-70 transition-opacity"
+          >
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+              style={{ background: ACCOUNT_ICON_BG[account.icon] }}
+            >
+              <AccountIcon size={22} color="white" strokeWidth={2} />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <p className="font-compact font-normal text-xs text-gray-500">{account.label}</p>
+              <p className="font-sans font-bold text-sm text-gray-900 truncate">{phone}</p>
+            </div>
+          </button>
 
           {/* Bell */}
           <button className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm shrink-0">
@@ -269,6 +286,14 @@ export default function Dashboard() {
             </div>
           )}
         </AnimatePresence>
+
+        {/* ── Phone switcher sheet ── */}
+        <PhoneSwitcherSheet
+          open={switcherOpen}
+          selectedId={account.id}
+          onClose={() => setSwitcherOpen(false)}
+          onSelect={handleSelectAccount}
+        />
 
       </div>
     </div>

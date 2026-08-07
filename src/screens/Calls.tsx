@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Search, Settings, X, Grid3x3, ArrowUpRight, Play, ArrowLeft, MoreHorizontal, ThumbsUp, ThumbsDown, Bell, FileText, AlignLeft } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { BottomNav } from '../components/layout/BottomNav'
+import { CallsAuthGate } from '../components/ui/CallsAuthGate'
+import { useAccount } from '../core/account-context'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -710,10 +712,16 @@ type DetailScreen = 'details' | 'transcript'
 
 export default function Calls() {
   const navigate = useNavigate()
+  const { account, callsConfirmed, confirmCalls } = useAccount()
   const [bannerVisible, setBannerVisible] = useState(true)
   const [activeFilter, setActiveFilter] = useState<FilterTab>('Все')
   const [openEntry, setOpenEntry] = useState<CallEntry | null>(null)
   const [detailScreen, setDetailScreen] = useState<DetailScreen>('details')
+
+  // Non-main numbers must pass the authorization gate first
+  if (!callsConfirmed) {
+    return <CallsAuthGate phone={account.phone} onConfirm={confirmCalls} />
+  }
 
   if (openEntry && detailScreen === 'transcript') {
     return <TranscriptScreen entry={openEntry} onBack={() => setDetailScreen('details')}/>

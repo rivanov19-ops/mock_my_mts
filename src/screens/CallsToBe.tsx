@@ -22,6 +22,18 @@ interface CallSummary {
 
 interface TranscriptMsg { speaker: string; self: boolean; text: string }
 
+// ─── Мой Контекст ─────────────────────────────────────────────────────────────
+// Блок контекста на экране деталей звонка. Живёт поверх итогов ИЗ:
+// роль собеседника, сюжеты, незакрытые договорённости с возрастом, история.
+interface ContextOpenItem { text: string; days: number }
+
+interface CallContext {
+  role?: string           // кто это: «коллега», «прораб»
+  storylines?: string[]   // сюжеты, в которых участвует контакт
+  open?: ContextOpenItem[] // что осталось без развязки, days — сколько висит
+  history?: string        // «7-й разговор с июня»
+}
+
 interface CallEntry {
   id: string
   name: string
@@ -44,6 +56,7 @@ interface CallEntry {
   summary?: CallSummary
   transcript?: TranscriptMsg[]
   favorite?: boolean
+  context?: CallContext
 }
 
 const PHONE_NUMBER = '+7 916 708-20-28'
@@ -117,11 +130,60 @@ const CALL_LOG: { date: string; calls: CallEntry[] }[] = [
         ],
       },
       {
+        id: 'r9', name: 'Сергей', initials: 'СЕ', initialsColor: '#FF9500',
+        callType: 'incoming', typeLabel: 'Входящий', time: '20:10',
+        date: 'Сегодня, 20:10 · Входящий · 12:04',
+        hasRecording: true, duration: '12:04',
+        topic: 'Обсудили смету на кухню, вернуться к цене в пятницу',
+        summary: {
+          tplLabel: 'Ремонт', tplColor: '#FF9500',
+          blocks: [
+            { title: 'О чём говорили', content: 'Прошлись по смете на кухню: плитка, электрика, потолок. Сергей пересчитал материалы после подорожания, итог вырос примерно на 18%.' },
+            { title: 'Договорились', content: 'Сергей присылает финальную смету до пятницы\nНачало работ — с понедельника, если цена устроит' },
+            { title: 'Открытые вопросы', content: 'Не решили по плитке: брать ту, что в смете, или искать дешевле. Сергей скинет два варианта.' },
+            { title: 'Заодно обсудили', content: 'Дачу — Сергей заедет на замер в выходные, отдельной сметы пока нет.' },
+          ],
+          actions: [
+            { type: 'reminder', text: 'Дождаться смету от Сергея в пятницу' },
+            { type: 'share', text: 'Поделиться итогами с Сергеем' },
+          ],
+          shareText: 'Итоги разговора с Сергеем:\n\nСмета на кухню выросла на ~18% из-за материалов. Финальная смета — до пятницы, работы с понедельника. По плитке два варианта на выбор. Замер на даче — в выходные.',
+        },
+        context: {
+          role: 'прораб',
+          storylines: ['Ремонт', 'Дача'],
+          open: [
+            { text: 'Смета на кухню — обещал до пятницы', days: 9 },
+            { text: 'Замер на даче', days: 3 },
+          ],
+          history: '7-й разговор с июня',
+        },
+        transcript: [
+          { speaker: 'Сергей', self: false, text: 'Алло, добрый день. Я по смете — пересчитал, как договаривались.' },
+          { speaker: 'Я', self: true, text: 'Да, слушаю. Сильно выросло?' },
+          { speaker: 'Сергей', self: false, text: 'Процентов на восемнадцать. Плитка подорожала и электрика.' },
+          { speaker: 'Я', self: true, text: 'Понял. А по плитке варианты есть подешевле?' },
+          { speaker: 'Сергей', self: false, text: 'Есть, скину два варианта. До пятницы пришлю финальную смету.' },
+          { speaker: 'Я', self: true, text: 'Хорошо. Если цена устроит — когда сможете начать?' },
+          { speaker: 'Сергей', self: false, text: 'С понедельника. И на дачу заеду на замер в выходные.' },
+          { speaker: 'Я', self: true, text: 'Договорились, жду смету' },
+        ],
+      },
+      {
         id: 'r3', name: 'Алёна Романова', initials: 'АР', initialsColor: '#7B8EC8',
         callType: 'incoming', typeLabel: 'Входящий', time: '19:01',
         date: 'Сегодня, 19:01 · Входящий · 06:44',
         hasRecording: true, duration: '06:44', noiseReduction: true, favorite: true,
         topic: 'Обсудили правки по презентации, договорились созвониться в пятницу',
+        context: {
+          role: 'коллега',
+          storylines: ['Презентация для клиента', 'Планы команды на квартал'],
+          open: [
+            { text: 'Блок с конкурентами — включать или нет', days: 12 },
+            { text: 'Согласовать презентацию с клиентом', days: 3 },
+          ],
+          history: '9-й разговор с марта',
+        },
         summary: {
           tplLabel: 'Созвон с коллегами', tplColor: '#5856D6',
           blocks: [
@@ -268,6 +330,14 @@ const CALL_LOG: { date: string; calls: CallEntry[] }[] = [
         date: '1 апреля, 17:30 · Исходящий · 02:15',
         hasRecording: true, duration: '02:15',
         topic: 'Договорились пойти в ресторан Hite на Серпуховской',
+        context: {
+          role: 'друг',
+          storylines: ['Встречи и поездки'],
+          open: [
+            { text: 'Вернуть книгу, которую занял в феврале', days: 47 },
+          ],
+          history: '4-й разговор с января',
+        },
         summary: {
           tplLabel: 'Личный звонок', tplColor: '#34C759',
           blocks: [
@@ -535,11 +605,60 @@ const RECORDING_LOG: { date: string; calls: CallEntry[] }[] = [
         ],
       },
       {
+        id: 'r9', name: 'Сергей', initials: 'СЕ', initialsColor: '#FF9500',
+        callType: 'incoming', typeLabel: 'Входящий', time: '20:10',
+        date: 'Сегодня, 20:10 · Входящий · 12:04',
+        hasRecording: true, duration: '12:04',
+        topic: 'Обсудили смету на кухню, вернуться к цене в пятницу',
+        summary: {
+          tplLabel: 'Ремонт', tplColor: '#FF9500',
+          blocks: [
+            { title: 'О чём говорили', content: 'Прошлись по смете на кухню: плитка, электрика, потолок. Сергей пересчитал материалы после подорожания, итог вырос примерно на 18%.' },
+            { title: 'Договорились', content: 'Сергей присылает финальную смету до пятницы\nНачало работ — с понедельника, если цена устроит' },
+            { title: 'Открытые вопросы', content: 'Не решили по плитке: брать ту, что в смете, или искать дешевле. Сергей скинет два варианта.' },
+            { title: 'Заодно обсудили', content: 'Дачу — Сергей заедет на замер в выходные, отдельной сметы пока нет.' },
+          ],
+          actions: [
+            { type: 'reminder', text: 'Дождаться смету от Сергея в пятницу' },
+            { type: 'share', text: 'Поделиться итогами с Сергеем' },
+          ],
+          shareText: 'Итоги разговора с Сергеем:\n\nСмета на кухню выросла на ~18% из-за материалов. Финальная смета — до пятницы, работы с понедельника. По плитке два варианта на выбор. Замер на даче — в выходные.',
+        },
+        context: {
+          role: 'прораб',
+          storylines: ['Ремонт', 'Дача'],
+          open: [
+            { text: 'Смета на кухню — обещал до пятницы', days: 9 },
+            { text: 'Замер на даче', days: 3 },
+          ],
+          history: '7-й разговор с июня',
+        },
+        transcript: [
+          { speaker: 'Сергей', self: false, text: 'Алло, добрый день. Я по смете — пересчитал, как договаривались.' },
+          { speaker: 'Я', self: true, text: 'Да, слушаю. Сильно выросло?' },
+          { speaker: 'Сергей', self: false, text: 'Процентов на восемнадцать. Плитка подорожала и электрика.' },
+          { speaker: 'Я', self: true, text: 'Понял. А по плитке варианты есть подешевле?' },
+          { speaker: 'Сергей', self: false, text: 'Есть, скину два варианта. До пятницы пришлю финальную смету.' },
+          { speaker: 'Я', self: true, text: 'Хорошо. Если цена устроит — когда сможете начать?' },
+          { speaker: 'Сергей', self: false, text: 'С понедельника. И на дачу заеду на замер в выходные.' },
+          { speaker: 'Я', self: true, text: 'Договорились, жду смету' },
+        ],
+      },
+      {
         id: 'r3', name: 'Алёна Романова', initials: 'АР', initialsColor: '#7B8EC8',
         callType: 'incoming', typeLabel: 'Входящий', time: '19:01',
         date: 'Сегодня, 19:01 · Входящий · 06:44',
         hasRecording: true, duration: '06:44', favorite: true,
         topic: 'Обсудили правки по презентации, договорились созвониться в пятницу',
+        context: {
+          role: 'коллега',
+          storylines: ['Презентация для клиента', 'Планы команды на квартал'],
+          open: [
+            { text: 'Блок с конкурентами — включать или нет', days: 12 },
+            { text: 'Согласовать презентацию с клиентом', days: 3 },
+          ],
+          history: '9-й разговор с марта',
+        },
         summary: {
           tplLabel: 'Созвон с коллегами', tplColor: '#5856D6',
           blocks: [
@@ -586,6 +705,14 @@ const RECORDING_LOG: { date: string; calls: CallEntry[] }[] = [
         date: '1 апреля, 17:30 · Исходящий · 02:15',
         hasRecording: true, duration: '02:15',
         topic: 'Договорились пойти в ресторан Hite на Серпуховской',
+        context: {
+          role: 'друг',
+          storylines: ['Встречи и поездки'],
+          open: [
+            { text: 'Вернуть книгу, которую занял в феврале', days: 47 },
+          ],
+          history: '4-й разговор с января',
+        },
         summary: {
           tplLabel: 'Личный звонок', tplColor: '#34C759',
           blocks: [
@@ -972,8 +1099,29 @@ function CallTypeIcon({ callType }: { callType: CallType }) {
 
 // ─── Call rows ────────────────────────────────────────────────────────────────
 
+// Метка «по этому контакту накоплен контекст». Если есть незакрытые пункты —
+// показываем их число, иначе только глиф.
+function ContextMark({ count = 0 }: { count?: number }) {
+  const glyph = (
+    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#E30611" strokeWidth="2.8" strokeLinecap="round">
+      <path d="M4 6h16"/><path d="M4 12h11"/><path d="M4 18h14"/>
+    </svg>
+  )
+  if (!count) {
+    return (
+      <span className="flex items-center justify-center rounded-full shrink-0"
+        style={{ width: 18, height: 18, background: '#FDECEC' }}>{glyph}</span>
+    )
+  }
+  return (
+    <span className="flex items-center gap-[3px] px-1.5 py-[3px] rounded-full shrink-0" style={{ background: '#FDECEC' }}>
+      {glyph}
+      <span className="font-sans font-bold text-[10px]" style={{ color: '#E30611' }}>{count}</span>
+    </span>
+  )
+}
+
 function CallRow({ entry, onClick }: { entry: CallEntry; onClick?: () => void }) {
-  const hasTranscript = !!(entry.hasRecording || entry.transcript)
   return (
     <button
       onClick={onClick}
@@ -985,24 +1133,7 @@ function CallRow({ entry, onClick }: { entry: CallEntry; onClick?: () => void })
         <div className="flex justify-between items-center mb-0.5">
           <p className="font-sans text-[15px] font-semibold truncate" style={{ color: '#1D2023' }}>{entry.name}</p>
           <div className="flex items-center gap-1.5 shrink-0 ml-2">
-            {entry.noiseReduction && (
-              <div className="flex items-center gap-1 px-1.5 py-[3px] rounded-full" style={{ background: '#E5F9F8' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00C7BE" strokeWidth="2.2" strokeLinecap="round">
-                  <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
-                  <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
-                </svg>
-                <span className="font-sans font-bold text-[10px]" style={{ color: '#00C7BE' }}>HD</span>
-              </div>
-            )}
-            {hasTranscript && (
-              <div className="flex items-center gap-[2px] px-1.5 py-[3px] rounded-full" style={{ background: '#F0F0F7' }}>
-                <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                  <path d="M1 4.5h5" stroke="#8B9CF4" strokeWidth="1.4" strokeLinecap="round"/>
-                  <path d="M4.5 2.5L6.5 4.5l-2 2" stroke="#8B9CF4" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span className="font-sans font-bold text-[10px]" style={{ color: '#8B9CF4' }}>T</span>
-              </div>
-            )}
+            {entry.context && <ContextMark count={entry.context.open?.length ?? 0}/>}
             <span className="font-compact text-[13px]" style={{ color: '#8D969F' }}>{entry.time}</span>
           </div>
         </div>
@@ -1027,15 +1158,7 @@ function RecordingCard({ entry, onSummary }: { entry: CallEntry; onTranscript?: 
         <div className="flex justify-between items-center mb-0.5">
           <p className="font-sans text-[15px] font-semibold truncate" style={{ color: '#1D2023' }}>{entry.name}</p>
           <div className="flex items-center gap-1.5 shrink-0 ml-2">
-            {entry.noiseReduction && (
-              <div className="flex items-center gap-1 px-1.5 py-[3px] rounded-full" style={{ background: '#E5F9F8' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00C7BE" strokeWidth="2.2" strokeLinecap="round">
-                  <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
-                  <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
-                </svg>
-                <span className="font-sans font-bold text-[10px]" style={{ color: '#00C7BE' }}>HD</span>
-              </div>
-            )}
+            {entry.context && <ContextMark count={entry.context.open?.length ?? 0}/>}
             <span className="font-compact text-[13px]" style={{ color: '#8D969F' }}>{entry.time}</span>
           </div>
         </div>
@@ -1095,6 +1218,244 @@ function TemplateBadge({ label, color, onSelect }: { label: string; color: strin
 }
 
 // ─── Details screen ───────────────────────────────────────────────────────────
+
+// ─── Дневник звонков ──────────────────────────────────────────────────────────
+// Еженедельный срез изменений контекста. Приходит по понедельникам, ничего
+// не хранит — только показывает дельту и уводит внутрь сущностей.
+const DIARY = {
+  period: '3–9 августа',
+  calls: 14,
+  open: [
+    { text: 'Смета на кухню — обещал до пятницы', who: 'Сергей, прораб', days: 9 },
+    { text: 'Блок с конкурентами — включать или нет', who: 'Алёна Романова', days: 12 },
+    { text: 'Вернуть книгу, которую занял в феврале', who: 'Иван Васильев', days: 47 },
+    { text: 'Замер на даче', who: 'Сергей, прораб', days: 3 },
+  ],
+  understood: [
+    { text: 'Похоже, вы делаете ремонт и параллельно занялись дачей', hint: 'Сергей появляется в обоих сюжетах — 7 разговоров с июня' },
+    { text: 'Похоже, вы готовите презентацию для клиента', hint: 'Тема всплывала в 4 разговорах за неделю' },
+  ],
+  moved: [
+    { text: 'Одобрение кредита — банк одобрил', who: 'Банк' },
+    { text: 'Доставка Ozon — забрали посылку', who: 'Курьер Ozon' },
+  ],
+  people: [
+    { who: 'Сергей', text: 'прораб, ведёт и квартиру, и дачу' },
+    { who: 'Алёна Романова', text: 'уходит в отпуск с 20 августа' },
+  ],
+}
+
+const daysWord = (d: number) => {
+  const n = d % 100
+  if (n >= 11 && n <= 14) return 'дней'
+  switch (d % 10) {
+    case 1: return 'день'
+    case 2: case 3: case 4: return 'дня'
+    default: return 'дней'
+  }
+}
+
+// Карточка-анонс дневника вверху ленты. Показывается по понедельникам,
+// если за неделю набралось не меньше 5 разговоров с итогами.
+function DiaryCard({ onOpen, onDismiss }: { onOpen: () => void; onDismiss: () => void }) {
+  return (
+    <div
+      className="flex items-center gap-3 cursor-pointer active:opacity-85 transition-opacity"
+      onClick={onOpen}
+      style={{
+        margin: '0 0 2px', borderRadius: 14, background: '#FDECEC',
+        border: '1px solid #F3B6B9', padding: '11px 12px',
+        boxShadow: '0 2px 12px rgba(227,6,17,0.10)',
+      }}
+    >
+      <div className="flex items-center justify-center shrink-0 rounded-[9px]"
+        style={{ width: 32, height: 32, background: 'rgba(227,6,17,0.12)' }}>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#E30611" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-sans font-bold text-[14px] truncate" style={{ color: '#1D2023' }}>Дневник звонков</p>
+        <p className="font-compact text-[12px]" style={{ color: '#8D5A5D' }}>
+          {DIARY.period} · {DIARY.open.length} без ответа, {DIARY.understood.length} факта о вас
+        </p>
+      </div>
+      <button onClick={e => { e.stopPropagation(); onDismiss() }}
+        className="flex items-center justify-center shrink-0 active:opacity-60" style={{ width: 26, height: 26 }}>
+        <X size={14} strokeWidth={2.2} style={{ color: '#1D2023', opacity: 0.35 }}/>
+      </button>
+    </div>
+  )
+}
+
+// Экран дневника. Блок «Что мы поняли» несёт петлю верификации —
+// пользователь подтверждает или отклоняет то, что система про него поняла.
+function DiaryScreen({ onBack }: { onBack: () => void }) {
+  const [verdict, setVerdict] = useState<Record<number, 'yes' | 'no'>>({})
+
+  const Section = ({ label, note, children }: { label: string; note?: string; children: React.ReactNode }) => (
+    <div className="mb-4">
+      <p className="font-compact text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">{label}</p>
+      {note && <p className="font-compact text-[12px] mb-2 ml-1" style={{ color: '#8D969F' }}>{note}</p>}
+      {children}
+    </div>
+  )
+
+  return (
+    <div className="min-h-screen flex justify-center bg-white">
+      <div className="w-full max-w-app flex flex-col min-h-screen">
+
+        <div className="px-4 pt-12 pb-3 bg-white border-b border-gray-100 shrink-0">
+          <div className="flex items-center gap-3">
+            <button onClick={onBack} className="w-9 h-9 flex items-center justify-center shrink-0 -ml-2">
+              <ArrowLeft size={22} className="text-gray-900" strokeWidth={2}/>
+            </button>
+            <div className="flex-1 min-w-0">
+              <p className="font-sans font-bold text-[17px]" style={{ color: '#1D2023' }}>Дневник звонков</p>
+              <p className="font-compact text-xs" style={{ color: '#8D969F' }}>{DIARY.period} · {DIARY.calls} разговоров</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-24 bg-gray-50">
+
+          <Section label="Что осталось без ответа">
+            <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
+              {DIARY.open.map((o, i) => (
+                <div key={i} className="px-4 py-3 flex items-start gap-3" style={{ borderTop: i > 0 ? '1px solid #F2F2F7' : 'none' }}>
+                  <span className="rounded-full shrink-0" style={{ width: 6, height: 6, background: '#E30611', marginTop: 7 }}/>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-compact text-sm leading-snug" style={{ color: '#1D2023' }}>{o.text}</p>
+                    <p className="font-compact text-[12px] mt-0.5" style={{ color: '#8D969F' }}>{o.who}</p>
+                  </div>
+                  <span className="font-compact text-[11px] font-semibold shrink-0 px-2 py-[2px] rounded-full"
+                    style={{ background: o.days >= 7 ? '#FDECEC' : '#F2F2F7', color: o.days >= 7 ? '#E30611' : '#8D969F' }}>
+                    {o.days} {daysWord(o.days)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          <Section label="Что мы поняли про вас" note="Подтвердите — или скажите, что мы ошиблись">
+            {DIARY.understood.map((u, i) => (
+              <div key={i} className="bg-white rounded-2xl px-4 py-3.5 mb-2" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
+                <p className="font-compact text-sm leading-snug" style={{ color: '#1D2023' }}>{u.text}</p>
+                <p className="font-compact text-[12px] mt-1" style={{ color: '#8D969F' }}>{u.hint}</p>
+                {verdict[i] ? (
+                  <p className="font-compact text-[13px] font-semibold mt-2.5"
+                    style={{ color: verdict[i] === 'yes' ? '#34C759' : '#8D969F' }}>
+                    {verdict[i] === 'yes' ? 'Спасибо, запомнили' : 'Убрали из вашего контекста'}
+                  </p>
+                ) : (
+                  <div className="flex gap-2 mt-3">
+                    <button onClick={() => setVerdict(v => ({ ...v, [i]: 'yes' }))}
+                      className="flex-1 rounded-xl py-2 font-sans font-bold text-[13px] active:opacity-80 transition-opacity"
+                      style={{ background: '#1D2023', color: 'white' }}>Верно</button>
+                    <button onClick={() => setVerdict(v => ({ ...v, [i]: 'no' }))}
+                      className="flex-1 rounded-xl py-2 font-sans font-bold text-[13px] active:opacity-80 transition-opacity"
+                      style={{ background: '#F2F2F7', color: '#1D2023' }}>Не про меня</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </Section>
+
+          <Section label="Что сдвинулось">
+            <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
+              {DIARY.moved.map((m, i) => (
+                <div key={i} className="px-4 py-3 flex items-start gap-3" style={{ borderTop: i > 0 ? '1px solid #F2F2F7' : 'none' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 2, flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-compact text-sm leading-snug" style={{ color: '#1D2023' }}>{m.text}</p>
+                    <p className="font-compact text-[12px] mt-0.5" style={{ color: '#8D969F' }}>{m.who}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          <Section label="Что нового о людях">
+            <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
+              {DIARY.people.map((p, i) => (
+                <div key={i} className="px-4 py-3" style={{ borderTop: i > 0 ? '1px solid #F2F2F7' : 'none' }}>
+                  <p className="font-compact text-[13px] font-semibold" style={{ color: '#1D2023' }}>{p.who}</p>
+                  <p className="font-compact text-sm mt-0.5" style={{ color: '#1D2023' }}>{p.text}</p>
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          <p className="font-compact text-[12px] text-center px-4 mt-5" style={{ color: '#8D969F' }}>
+            Дневник приходит по понедельникам, если за неделю набралось не меньше 5 разговоров с итогами
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Блок «Мой Контекст» — что известно о собеседнике поверх итога этого звонка.
+// Показывается только у контактов, по которым контекст накоплен.
+function ContextCard({ ctx, onOpen }: { ctx: CallContext; onOpen?: () => void }) {
+  const plural = (d: number) => {
+    const n = d % 100
+    if (n >= 11 && n <= 14) return 'дней'
+    switch (d % 10) {
+      case 1: return 'день'
+      case 2: case 3: case 4: return 'дня'
+      default: return 'дней'
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden mb-3" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
+      <div className="px-4 pt-3.5 pb-1 flex items-center gap-2">
+        <p className="font-compact text-[10px] font-bold uppercase tracking-widest" style={{ color: '#E30611' }}>Контекст</p>
+        <span className="font-compact text-[9px] font-bold uppercase tracking-wider px-1.5 py-[2px] rounded-full"
+          style={{ background: '#FDECEC', color: '#E30611' }}>новое</span>
+      </div>
+
+      {(ctx.role || ctx.storylines?.length) && (
+        <div className="px-4 pb-3 pt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1">
+          {ctx.role && <span className="font-compact text-sm" style={{ color: '#1D2023' }}>{ctx.role}</span>}
+          {ctx.role && !!ctx.storylines?.length && <span className="font-compact text-sm" style={{ color: '#C7C7CC' }}>·</span>}
+          {ctx.storylines?.map((s, i) => (
+            <span key={i} className="font-compact text-[13px] px-2 py-[3px] rounded-full"
+              style={{ background: '#F2F2F7', color: '#1D2023' }}>{s}</span>
+          ))}
+        </div>
+      )}
+
+      {!!ctx.open?.length && (
+        <div className="px-4 py-3" style={{ borderTop: '1px solid #F2F2F7' }}>
+          <p className="font-compact text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Осталось без ответа</p>
+          {ctx.open.map((o, i) => (
+            <div key={i} className="flex items-start gap-2.5" style={{ marginTop: i > 0 ? 10 : 0 }}>
+              <span className="rounded-full shrink-0" style={{ width: 6, height: 6, background: '#E30611', marginTop: 6 }}/>
+              <p className="font-compact text-sm leading-snug flex-1" style={{ color: '#1D2023' }}>{o.text}</p>
+              <span className="font-compact text-[11px] font-semibold shrink-0 px-2 py-[2px] rounded-full"
+                style={{ background: o.days >= 7 ? '#FDECEC' : '#F2F2F7', color: o.days >= 7 ? '#E30611' : '#8D969F' }}>
+                {o.days} {plural(o.days)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {ctx.history && (
+        <button onClick={onOpen} className="w-full px-4 py-3 flex items-center justify-between text-left active:bg-gray-50 transition-colors"
+          style={{ borderTop: '1px solid #F2F2F7' }}>
+          <span className="font-compact text-[13px]" style={{ color: '#8D969F' }}>{ctx.history}</span>
+          <span className="flex items-center gap-1">
+            <span className="font-compact text-[13px] font-semibold" style={{ color: '#0070E5' }}>Вся история</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0070E5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </button>
+      )}
+    </div>
+  )
+}
 
 function DetailsScreen({ entry, onBack, onTranscript, summaryState = 'visible' }: { entry: CallEntry; onBack: () => void; onTranscript: () => void; summaryState?: 'hidden' | 'loading' | 'visible' }) {
   const navigate = useNavigate()
@@ -1390,6 +1751,8 @@ function DetailsScreen({ entry, onBack, onTranscript, summaryState = 'visible' }
                   </div>
                 ))}
               </div>
+
+              {entry.context && <ContextCard ctx={entry.context}/>}
 
               <p className="font-compact text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Действия</p>
 
@@ -2814,6 +3177,7 @@ const CONTACTS_DATA = [
   { name: 'МТС',            initials: 'МТ', color: '#E30611',  phone: undefined,          lastCall: '12 февраля, 11:00 · Входящий' },
   { name: 'Бабушка',        initials: 'БА', color: '#7B8EC8',  phone: undefined,          lastCall: 'Вчера, 21:26 · Ответил Секретарь' },
   { name: 'Алёна Романова', initials: 'АР', color: '#7B8EC8',  phone: undefined,          lastCall: 'Сегодня, 19:01 · Входящий' },
+  { name: 'Сергей',         initials: 'СЕ', color: '#FF9500',  phone: undefined,          lastCall: 'Сегодня, 20:10 · Входящий' },
   { name: 'Иван Васильев',  initials: 'ИВ', color: '#7B8EC8',  phone: undefined,          lastCall: '1 апреля, 20:05 · Ответил Секретарь' },
   { name: 'Курьер Ozon',    initials: 'OZ', color: '#0070E5',  phone: undefined,          lastCall: '31 марта, 16:05 · Ответил Секретарь' },
   { name: 'Яндекс Еда',     initials: 'ЯЕ', color: '#FF2D55',  phone: undefined,          lastCall: '31 марта, 13:15 · Входящий' },
@@ -2927,6 +3291,8 @@ export default function CallsToBe() {
   const [detailScreen, setDetailScreen] = useState<DetailScreen>('details')
   const [alertVisible, setAlertVisible] = useState(true)
   const [alertModalOpen, setAlertModalOpen] = useState(false)
+  const [diaryVisible, setDiaryVisible] = useState(true)
+  const [showDiary, setShowDiary] = useState(false)
   const [r4Phase, setR4Phase] = useState<'idle' | 'modal' | 'spinning' | 'ready'>('idle')
   const [secretaryEntry, setSecretaryEntry] = useState<CallEntry | null>(null)
   const [blockedEntry, setBlockedEntry] = useState<CallEntry | null>(null)
@@ -2937,8 +3303,20 @@ export default function CallsToBe() {
 
   const dismissAlert = () => { setAlertVisible(false); setAlertModalOpen(false) }
 
+  // Диплинк для показов и скриншотов: /calls/tobe?open=diary | ?open=<id звонка>
+  useEffect(() => {
+    const target = new URLSearchParams(window.location.search).get('open')
+    if (!target) return
+    if (target === 'diary') { setShowDiary(true); return }
+    const found = CALL_LOG.flatMap(g => g.calls).find(c => c.id === target)
+    if (found) setOpenEntry(found)
+  }, [])
+
   if (showContacts) {
     return <ContactsScreen onBack={() => setShowContacts(false)}/>
+  }
+  if (showDiary) {
+    return <DiaryScreen onBack={() => setShowDiary(false)}/>
   }
   if (incomingEntry) {
     return <IncomingDetailScreen entry={incomingEntry} onBack={() => setIncomingEntry(null)}/>
@@ -3069,6 +3447,11 @@ export default function CallsToBe() {
         <div className="flex-1 overflow-y-auto pb-24">
           <div className="px-2 pt-3 flex flex-col gap-[6px]">
 
+            {/* Дневник звонков — анонс недельного свода, вкладка «Все» */}
+            {activeFilter === 'Все' && diaryVisible && (
+              <DiaryCard onOpen={() => setShowDiary(true)} onDismiss={() => setDiaryVisible(false)}/>
+            )}
+
             {/* Amber alert — only on "Записи" tab while not dismissed */}
             {activeFilter === 'Записи' && alertVisible && (
               <div
@@ -3106,15 +3489,14 @@ export default function CallsToBe() {
               </div>
             )}
 
-            {/* Promo banner — hidden on "Записи" while alert is visible */}
-            {bannerVisible && !(activeFilter === 'Записи' && alertVisible) && (
+            {/* Promo banner — не показываем на «Все» (там дневник), и на «Записи» под алертом */}
+            {bannerVisible && activeFilter !== 'Все' && !(activeFilter === 'Записи' && alertVisible) && (
               <div className="banner-glow rounded-2xl p-[1.5px]">
                 <div
                   className="bg-white rounded-[14px] p-4 flex items-center gap-3 cursor-pointer active:opacity-80 transition-opacity"
                   onClick={() => {
                     if (activeFilter === 'Записи') navigate('/calls/noise-reduction-promo')
                     else if (activeFilter === 'Секретарь') navigate('/calls/smart-recording-promo')
-                    else if (activeFilter === 'Все') navigate('/calls/secretary-plus-promo')
                   }}
                 >
                   <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">

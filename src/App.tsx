@@ -17,6 +17,7 @@ import NoiseReductionPromo from './screens/NoiseReductionPromo'
 import SecretaryAnswers from './screens/SecretaryAnswers'
 import VoiceTech from './screens/VoiceTech'
 import VoiceTechAuth from './screens/VoiceTechAuth'
+import VoiceTechServices from './screens/VoiceTechServices'
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ export default function App() {
       <Route path="/calls/secretary-answers" element={<SecretaryAnswers />} />
       <Route path="/voicetech" element={<VoiceTech />} />
       <Route path="/voicetech-auth" element={<VoiceTechAuth />} />
+      <Route path="/calls/voicetech-services" element={<VoiceTechServices />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   )
