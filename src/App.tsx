@@ -8,12 +8,14 @@ import Support from './screens/Support'
 import Money from './screens/Money'
 import Calls from './screens/Calls'
 import CallsToBe from './screens/CallsToBe'
+import AllCalls from './screens/AllCalls'
 import CallSettings from './screens/CallSettings'
 import CallsCatalog from './screens/CallsCatalog'
 import SecretaryPromo from './screens/SecretaryPromo'
 import SmartRecordingPromo from './screens/SmartRecordingPromo'
 import SecretaryPlusPromo from './screens/SecretaryPlusPromo'
 import NoiseReductionPromo from './screens/NoiseReductionPromo'
+import SmartRecordingFAQ from './screens/SmartRecordingFAQ'
 import SecretaryAnswers from './screens/SecretaryAnswers'
 import VoiceTech from './screens/VoiceTech'
 import VoiceTechAuth from './screens/VoiceTechAuth'
@@ -30,12 +32,14 @@ export default function App() {
       <Route path="/money" element={<Money />} />
       <Route path="/calls" element={<Calls />} />
       <Route path="/calls/tobe" element={<CallsToBe />} />
+      <Route path="/calls/all" element={<AllCalls />} />
       <Route path="/calls/settings" element={<CallSettings />} />
       <Route path="/calls/catalog" element={<CallsCatalog />} />
       <Route path="/calls/secretary-promo" element={<SecretaryPromo />} />
       <Route path="/calls/smart-recording-promo" element={<SmartRecordingPromo />} />
       <Route path="/calls/secretary-plus-promo" element={<SecretaryPlusPromo />} />
       <Route path="/calls/noise-reduction-promo" element={<NoiseReductionPromo />} />
+      <Route path="/calls/smart-recording-faq" element={<SmartRecordingFAQ />} />
       <Route path="/calls/secretary-answers" element={<SecretaryAnswers />} />
       <Route path="/voicetech" element={<VoiceTech />} />
       <Route path="/voicetech-auth" element={<VoiceTechAuth />} />

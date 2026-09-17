@@ -36,6 +36,12 @@ export default function Placeholder() {
           >
             → Open VoiceTech
           </button>
+          <button
+            onClick={() => navigate('/calls/all')}
+            className="text-mts-red text-sm font-medium underline"
+          >
+            → Все Звонки
+          </button>
         </div>
       </div>
     </div>
