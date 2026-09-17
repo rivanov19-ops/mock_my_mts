@@ -1,37 +1,116 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, MoreHorizontal, Play, AlignLeft } from 'lucide-react'
+import { ArrowLeft, MoreHorizontal, Play } from 'lucide-react'
 
 import { AnimatePresence, motion } from 'framer-motion'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+interface SummaryBlock {
+  title: string
+  content: string
+}
+
+type DeliveryStatus = 'delivered' | 'read'
+
+interface SecretaryData {
+  status: DeliveryStatus
+  /** Время прочтения. Показывается, только если абонент дал согласие на статус прочтения */
+  readAt?: string
+  dialog: { author: 'bot' | 'me'; text: string }[]
+}
+
 interface CallEntry {
   id: string
-  name: string
+  /** Номер абонента МТС. Имя и аватар на Витрине не показываются */
   phone: string
-  initials: string
-  initialsColor: string
   type: string
   time: string
   date: string
   duration: string
-  transcript: { author: 'them' | 'me'; text: string }[]
+  /** Шумоподавление срабатывало в звонке */
+  noiseReduction?: boolean
+  /** Короткие итоги для карточки в списке (только у звонков с ИЗ) */
+  shortSummary?: string
+  /** Развёрнутые итоги на экране звонка (только у звонков с ИЗ) */
+  summary?: SummaryBlock[]
+  /** Расшифровка. Нет у звонков, где сработало только Шумоподавление */
+  transcript?: { author: 'them' | 'me'; text: string }[]
+  /** Разговор с Секретарём абонента. Звонящий — сам участник этого разговора */
+  secretary?: SecretaryData
 }
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
 const SHARED_CALLS: CallEntry[] = [
   {
+    id: 's1',
+    phone: '+7 916 240-11-08',
+    type: 'Исходящий',
+    time: '20:14',
+    date: 'Сегодня, 20:14',
+    duration: '48 сек',
+    shortSummary: 'Привёз документы, стою у второго подъезда',
+    secretary: {
+      status: 'read',
+      readAt: '20:16',
+      dialog: [
+        { author: 'bot', text: 'Здравствуйте! Абонент сейчас не может ответить, я его секретарь. Что передать?' },
+        { author: 'me',  text: 'Это курьер, привёз документы. Стою у второго подъезда' },
+        { author: 'bot', text: 'Записал: курьер с документами, ждёт у второго подъезда. Передам абоненту' },
+      ],
+    },
+  },
+  {
+    id: 's2',
+    phone: '+7 925 703-52-19',
+    type: 'Исходящий',
+    time: '16:42',
+    date: 'Сегодня, 16:42',
+    duration: '31 сек',
+    shortSummary: 'Звоню по объявлению, уточнял, актуальна ли квартира',
+    secretary: {
+      status: 'delivered',
+      dialog: [
+        { author: 'bot', text: 'Здравствуйте! Абонент сейчас не отвечает, я его секретарь. Что передать?' },
+        { author: 'me',  text: 'Звоню по объявлению, квартира на [неразборчиво] ещё актуальна?' },
+        { author: 'bot', text: 'Записал, передам абоненту' },
+      ],
+    },
+  },
+  {
     id: '1',
-    name: 'Иван Васильев',
+    phone: '+7 000 364-44-11',
+    type: 'Входящий',
+    time: '19:01',
+    date: 'Сегодня, 19:01',
+    duration: '1 мин',
+    noiseReduction: true,
+    shortSummary: 'Презентацию перенесли на среду, нужно внести все правки и подготовить финальные материалы',
+    summary: [
+      { title: 'Отчёт', content: 'Презентация → перенесена на среду\nЦель — успеть внести все правки и подготовить финальные материалы' },
+      { title: 'Задачи и ответственные', content: 'Паша: уточняет цифры у подрядчика и сверяет расчёты\nЯ: проверяю структуру документа и последовательность разделов' },
+    ],
+    transcript: [
+      { author: 'them', text: 'Слушай, презентацию двигают на среду' },
+      { author: 'me',   text: 'Успеем? Там ещё правки по цифрам' },
+      { author: 'them', text: 'Я уточню у подрядчика и сверю расчёты' },
+      { author: 'me',   text: 'Ок, тогда я пройдусь по структуре и порядку разделов' },
+      { author: 'them', text: 'Договорились, к среде всё финальное' },
+    ],
+  },
+  {
+    id: '2',
     phone: '+7 900 364-44-11',
-    initials: 'ИВ',
-    initialsColor: '#9B9FDE',
     type: 'Входящий',
     time: '12:30',
     date: 'Сегодня, 12:30',
     duration: '40 сек',
+    shortSummary: 'Договорились завтра погулять, если дождь — зайдём в кофейню',
+    summary: [
+      { title: 'О чём говорили', content: 'Обсудили планы на завтра и прогноз погоды' },
+      { title: 'Договорённости', content: 'Завтра гуляем\nЕсли дождь — заходим в кофейню рядом' },
+    ],
     transcript: [
       { author: 'them', text: 'Алло, привет, как ты там?' },
       { author: 'me',   text: 'Привет, отлично, пойдем завтра гулять?' },
@@ -42,15 +121,25 @@ const SHARED_CALLS: CallEntry[] = [
     ],
   },
   {
-    id: '2',
-    name: 'Иван Васильев',
+    id: '3',
+    phone: '+7 903 118-90-40',
+    type: 'Входящий',
+    time: '11:15',
+    date: 'Сегодня, 11:15',
+    duration: '3 мин 20 сек',
+    noiseReduction: true,
+  },
+  {
+    id: '4',
     phone: '+7 900 364-44-11',
-    initials: 'ИВ',
-    initialsColor: '#9B9FDE',
     type: 'Входящий',
     time: '10:05',
     date: 'Сегодня, 10:05',
     duration: '1 мин 12 сек',
+    shortSummary: 'Иван зайдёт на минуту, ты дома',
+    summary: [
+      { title: 'Договорённости', content: 'Иван заходит на минуту сегодня' },
+    ],
     transcript: [
       { author: 'them', text: 'Привет, ты дома?' },
       { author: 'me',   text: 'Да, что случилось?' },
@@ -59,15 +148,17 @@ const SHARED_CALLS: CallEntry[] = [
     ],
   },
   {
-    id: '3',
-    name: 'Иван Васильев',
+    id: '5',
     phone: '+7 900 364-44-11',
-    initials: 'ИВ',
-    initialsColor: '#9B9FDE',
     type: 'Входящий',
     time: '02.03',
     date: '02 марта, 18:45',
     duration: '2 мин 5 сек',
+    shortSummary: 'Встреча в пятницу в 15:00, офис на Тверской',
+    summary: [
+      { title: 'Отчёт', content: 'Встреча в пятницу в 15:00' },
+      { title: 'Где', content: 'Офис на Тверской' },
+    ],
     transcript: [
       { author: 'them', text: 'Не забудь про встречу в пятницу' },
       { author: 'me',   text: 'Помню, во сколько?' },
@@ -75,15 +166,16 @@ const SHARED_CALLS: CallEntry[] = [
     ],
   },
   {
-    id: '4',
-    name: 'Смирнов Юрий',
+    id: '6',
     phone: '+7 916 555-33-22',
-    initials: 'СМ',
-    initialsColor: '#E8A07A',
     type: 'Входящий',
     time: '04.03',
     date: '04 марта, 09:10',
     duration: '55 сек',
+    shortSummary: 'Юрий отправил документы на почту, нужно проверить сегодня',
+    summary: [
+      { title: 'Задачи и ответственные', content: 'Я: проверить документы на почте сегодня' },
+    ],
     transcript: [
       { author: 'them', text: 'Юрий, добрый день' },
       { author: 'me',   text: 'Добрый, слушаю' },
@@ -181,10 +273,142 @@ function LogoutPopup({ onClose, onConfirm }: { onClose: () => void; onConfirm: (
   )
 }
 
+// ─── Шумоподавление ───────────────────────────────────────────────────────────
+
+function EqualizerIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 9 9" fill="none">
+      <rect x="0.5" y="3.5" width="1.5" height="3" rx="0.75" fill="#00C7BE"/>
+      <rect x="3.75" y="1.5" width="1.5" height="6" rx="0.75" fill="#00C7BE"/>
+      <rect x="7" y="2.5" width="1.5" height="4" rx="0.75" fill="#00C7BE"/>
+    </svg>
+  )
+}
+
+function NoiseChip() {
+  return (
+    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: '#E5F9F8' }}>
+      <EqualizerIcon />
+      <span className="font-compact font-semibold text-xs" style={{ color: '#00C7BE' }}>Шумоподавление</span>
+    </div>
+  )
+}
+
+// ─── Промо подписки AI Помощник ──────────────────────────────────────────────
+// Неабоненту доступна только подписка AI Помощник — других промо на Витрине нет
+
+const ASSISTANT_PROMO = {
+  default: {
+    title: 'AI Помощник МТС',
+    text: 'Секретарь, Интеллектуальная запись и Шумоподавление в одной подписке',
+    color: '#7C8CE0',
+    bg: '#EEF0FC',
+    gradient: 'linear-gradient(160deg, #A8B4F0, #7C8CE0)',
+  },
+  secretary: {
+    title: 'Ваш телефон тоже может отвечать за вас',
+    text: 'Секретарь принимает звонки, когда неудобно говорить, и присылает расшифровку. Входит в подписку AI Помощник',
+    color: '#7C8CE0',
+    bg: '#EEF0FC',
+    gradient: 'linear-gradient(160deg, #A8B4F0, #7C8CE0)',
+  },
+  noise: {
+    title: 'Вас тоже будет слышно чисто',
+    text: 'Шумоподавление уберёт из разговора шум улицы, метро и кафе. Входит в подписку AI Помощник',
+    color: '#00C7BE',
+    bg: '#E5F9F8',
+    gradient: 'linear-gradient(160deg, #7FE3DC, #00C7BE)',
+  },
+}
+
+function AssistantPromo({ accent = 'default' }: { accent?: keyof typeof ASSISTANT_PROMO }) {
+  const p = ASSISTANT_PROMO[accent]
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ background: p.bg }}>
+      <div className="px-5 pt-6 pb-5 flex items-center gap-4">
+        <div className="flex-1">
+          <p className="font-sans font-black text-[1.35rem] text-gray-900 leading-tight">{p.title}</p>
+          <p className="font-compact font-normal text-sm text-gray-500 mt-2 leading-snug">{p.text}</p>
+        </div>
+        <div className="w-16 h-16 rounded-2xl shrink-0 flex items-center justify-center" style={{ background: p.gradient }}>
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="white">
+            <path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15z"/>
+          </svg>
+        </div>
+      </div>
+      <div className="px-5 pb-5">
+        <button
+          className="w-full rounded-full py-3.5 font-sans font-bold text-sm text-white uppercase tracking-widest active:opacity-80 transition-opacity"
+          style={{ background: p.color }}
+          onClick={() => window.open('https://moskva.mts.ru/personal/mobilnaya-svyaz/uslugi/mobilnaya-svyaz/voicetech', '_blank')}
+        >
+          Узнать об AI Помощнике
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Шапка звонка: дата, тип, длительность, ШП, срок хранения ────────────────
+
+function CallMeta({ call }: { call: CallEntry }) {
+  return (
+    <>
+      <p className="font-compact font-normal text-sm text-gray-400 mb-1">{call.date}</p>
+
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 2C2 2 3 0.5 4.5 2L6 3.5C6.5 4 6 5 5.5 5.5C5 6 5.5 7 6.5 8C7.5 9 8.5 9.5 9 9C9.5 8.5 10.5 8 11 8.5L12.5 10C14 11.5 12.5 12.5 12.5 12.5C9.5 15 -0.5 5 2 2Z" fill="#4B5563"/>
+          </svg>
+          <span className="font-sans font-bold text-base text-gray-900 truncate">
+            {call.type} звонок{' '}
+            <span className="font-compact font-normal text-base text-gray-400">{call.duration}</span>
+          </span>
+        </div>
+        <a
+          href={`tel:${call.phone.replace(/[^+\d]/g, '')}`}
+          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-transform"
+          style={{ background: '#34C759' }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+            <path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .7-.2 1l-2.3 2.2z"/>
+          </svg>
+        </a>
+      </div>
+
+      {call.noiseReduction && <div className="mb-3"><NoiseChip /></div>}
+
+      <p className="font-compact font-normal text-xs text-gray-400 text-center py-3 border-t border-b border-gray-100 mb-4">
+        Детали звонка удаляются через 90 дней
+      </p>
+    </>
+  )
+}
+
+// ─── Итоги разговора ─────────────────────────────────────────────────────────
+
+function SummaryCard({ blocks }: { blocks: SummaryBlock[] }) {
+  return (
+    <>
+      <div className="bg-gray-50 rounded-2xl overflow-hidden mb-2">
+        {blocks.map((b, i) => (
+          <div key={i} className="px-4 py-3.5" style={{ borderTop: i > 0 ? '1px solid #ECECF2' : 'none' }}>
+            <p className="font-compact text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{b.title}</p>
+            <p className="font-compact text-sm text-gray-900 leading-relaxed whitespace-pre-line">{b.content}</p>
+          </div>
+        ))}
+      </div>
+      <p className="font-compact font-normal text-xs text-gray-400 leading-snug mb-5">
+        Итоги разговора составлены при помощи ИИ. Возможны неточности
+      </p>
+    </>
+  )
+}
+
 // ─── Transcript Screen ────────────────────────────────────────────────────────
 
 function TranscriptScreen({ call, onBack }: { call: CallEntry; onBack: () => void }) {
-  const [showSummary, setShowSummary] = useState(false)
   const [showPlayer, setShowPlayer] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -197,15 +421,8 @@ function TranscriptScreen({ call, onBack }: { call: CallEntry; onBack: () => voi
           <button onClick={onBack} className="w-9 h-9 flex items-center justify-center shrink-0">
             <ArrowLeft size={22} className="text-gray-900" strokeWidth={2} />
           </button>
-          <div
-            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: call.initialsColor }}
-          >
-            <span className="text-white font-sans font-bold text-sm">{call.initials}</span>
-          </div>
           <div className="flex-1 min-w-0">
-            <p className="font-sans font-bold text-base text-gray-900 truncate">{call.name}</p>
-            <p className="font-compact font-normal text-xs text-gray-400">{call.phone}</p>
+            <p className="font-sans font-bold text-base text-gray-900 truncate">{call.phone}</p>
           </div>
           <button onClick={() => setShowMenu(true)} className="w-9 h-9 flex items-center justify-center shrink-0">
             <MoreHorizontal size={22} className="text-gray-700" strokeWidth={2} />
@@ -216,81 +433,28 @@ function TranscriptScreen({ call, onBack }: { call: CallEntry; onBack: () => voi
         <div className="flex-1 overflow-y-auto pb-20">
           <div className="px-4 pt-5">
 
-            {/* Call meta */}
-            <p className="font-compact font-normal text-sm text-gray-400 mb-1">{call.date}</p>
-            <div className="flex items-center gap-2 mb-4">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 2C2 2 3 0.5 4.5 2L6 3.5C6.5 4 6 5 5.5 5.5C5 6 5.5 7 6.5 8C7.5 9 8.5 9.5 9 9C9.5 8.5 10.5 8 11 8.5L12.5 10C14 11.5 12.5 12.5 12.5 12.5C9.5 15 -0.5 5 2 2Z" fill="#4B5563"/>
-              </svg>
-              <span className="font-sans font-bold text-base text-gray-900">
-                Входящий звонок{' '}
-                <span className="font-compact font-normal text-base text-gray-400">{call.duration}</span>
-              </span>
-            </div>
+            <CallMeta call={call} />
 
-            {/* Audio controls */}
+            {call.summary && <SummaryCard blocks={call.summary} />}
+
+            {/* Audio */}
             <div className="flex items-center gap-3 mb-5">
               <button onClick={() => setShowPlayer(true)} className="flex items-center gap-2 bg-gray-100 rounded-full px-5 py-2.5 active:bg-gray-200 transition-colors">
                 <Play size={13} fill="#1A1A1A" color="#1A1A1A" />
                 <span className="font-sans font-bold text-sm text-gray-900">Слушать</span>
               </button>
-              <button onClick={() => setShowSummary(true)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center active:bg-gray-200 transition-colors">
-                <AlignLeft size={16} className="text-gray-700" strokeWidth={1.8} />
-              </button>
             </div>
 
-            <div className="border-t border-gray-100 mb-5" />
-
-            {/* Promo card */}
-            <div className="bg-gray-50 rounded-2xl p-4 flex flex-col gap-4 mb-3">
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <p className="font-sans font-bold text-base text-gray-900">Подключите VoiceTech</p>
-                  <p className="font-compact font-normal text-sm text-gray-400 mt-0.5">Оцените AI Звонки</p>
-                </div>
-                <div
-                  className="w-14 h-16 rounded-xl shrink-0 flex items-center justify-center"
-                  style={{ background: 'linear-gradient(160deg, #D0D4F0, #B8BEEA)' }}
-                >
-                  <svg width="30" height="36" viewBox="0 0 30 36" fill="none">
-                    <rect x="2" y="2" width="26" height="32" rx="5" fill="url(#sg2)" />
-                    <rect x="8" y="16" width="14" height="10" rx="2" fill="white" opacity="0.6" />
-                    <defs>
-                      <linearGradient id="sg2" x1="0" y1="0" x2="30" y2="36" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stopColor="#C8CEED" />
-                        <stop offset="100%" stopColor="#9FA8DA" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </div>
-              </div>
-              <button
-                className="w-full bg-white border border-gray-200 rounded-full py-3.5 font-sans font-bold text-sm text-gray-900 uppercase tracking-widest hover:bg-gray-50 transition-colors"
-                onClick={() => window.open('https://moskva.mts.ru/personal/mobilnaya-svyaz/uslugi/mobilnaya-svyaz/voicetech', '_blank')}
-              >
-                Попробовать
-              </button>
+            <div className="mb-5">
+              <AssistantPromo />
             </div>
-
-            {/* Expiry note */}
-            <p className="font-compact font-normal text-xs text-gray-400 text-center mb-5">
-              Детали звонка удалятся через 90 дней
-            </p>
 
             {/* Transcript bubbles */}
             <div className="flex flex-col gap-3">
-              {call.transcript.map((msg, i) => (
+              {call.transcript?.map((msg, i) => (
                 <div key={i} className={`flex flex-col gap-0.5 ${msg.author === 'me' ? 'items-end' : 'items-start'}`}>
                   {msg.author === 'them' && (
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <div
-                        className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ background: call.initialsColor }}
-                      >
-                        <span className="text-white font-sans font-bold" style={{ fontSize: 9 }}>{call.initials}</span>
-                      </div>
-                      <span className="font-sans font-bold text-sm text-gray-900">{call.name}</span>
-                    </div>
+                    <span className="font-sans font-bold text-sm text-gray-900 mb-0.5">{call.phone}</span>
                   )}
                   <div
                     className={`max-w-[78%] px-4 py-3 rounded-2xl
@@ -432,46 +596,6 @@ function TranscriptScreen({ call, onBack }: { call: CallEntry; onBack: () => voi
           )}
         </AnimatePresence>
 
-        {/* Summary sheet */}
-        <AnimatePresence>
-          {showSummary && (
-            <motion.div
-              className="fixed inset-0 z-50 flex items-end justify-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="absolute inset-0 bg-black/30" onClick={() => setShowSummary(false)} />
-              <motion.div
-                className="relative w-full max-w-app bg-white rounded-t-[24px] overflow-hidden"
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              >
-                <div className="flex justify-center pt-2 pb-1">
-                  <div className="w-10 h-1 rounded-full bg-gray-200" />
-                </div>
-                <div className="px-5 pt-3 pb-10">
-                  <div className="flex items-start justify-between mb-1">
-                    <h2 className="font-sans font-bold text-xl text-gray-900">Итоги разговора</h2>
-                    <button onClick={() => setShowSummary(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 shrink-0 ml-2 active:bg-gray-200">
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path d="M2 2L12 12M12 2L2 12" stroke="#374151" strokeWidth="2" strokeLinecap="round"/>
-                      </svg>
-                    </button>
-                  </div>
-                  <p className="font-compact font-normal text-sm text-gray-400 mb-5 leading-snug">
-                    Составлены при помощи ИИ для вашего собеседника, возможны неточности
-                  </p>
-                  <p className="font-compact font-normal text-base text-gray-900 leading-relaxed">
-                    Договорились завтра пойти с Иваном на прогулку, посмотрели прогноз погоды и выбрали кофейню, в которую планировали зайти
-                  </p>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   )
@@ -479,54 +603,198 @@ function TranscriptScreen({ call, onBack }: { call: CallEntry; onBack: () => voi
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 
-function Avatar({ initials, color }: { initials: string; color: string }) {
-  return (
-    <div
-      className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center shrink-0"
-      style={{ background: color }}
-    >
-      <span className="text-white font-sans font-bold text-base">{initials}</span>
-    </div>
-  )
-}
-
-function SecretaryBadge() {
-  return (
-    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-      <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
-        <path d="M2 7H10M7 4L10 7L7 10" stroke="#9CA3AF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M13 3H17M15 3V11" stroke="#9CA3AF" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    </div>
-  )
-}
-
 function CallRow({ entry, onClick }: { entry: CallEntry; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="w-full bg-white rounded-2xl px-4 py-3.5 flex items-center gap-4 active:scale-[0.98] transition-transform text-left"
+      className="w-full bg-white rounded-2xl overflow-hidden active:scale-[0.98] transition-transform text-left"
       style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}
     >
-      <Avatar initials={entry.initials} color={entry.initialsColor} />
-      <div className="flex-1 min-w-0">
-        <p className="font-sans font-bold text-base text-gray-900 truncate">{entry.name}</p>
-        <div className="flex items-center gap-1 mt-0.5">
-          <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-            <path d="M2 2.5C2 2.5 3 1 4.5 2.5L6 4C6.5 4.5 6 5.5 5.5 6C5 6.5 5.5 7.5 6.5 8.5C7.5 9.5 8.5 10 9 9.5C9.5 9 10.5 8.5 11 9L12.5 10.5C14 12 12.5 13 12.5 13C9.5 15.5 -1.5 4.5 2 2.5Z" fill="#9CA3AF"/>
-          </svg>
-          <span className="font-compact font-normal text-xs text-gray-400">{entry.type}</span>
+      <div className="px-4 py-3.5 flex items-center gap-4">
+        <div className="flex-1 min-w-0">
+          <p className="font-sans font-bold text-base text-gray-900 truncate">{entry.phone}</p>
+          <div className="flex items-center gap-1 mt-0.5">
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+              <path d="M2 2.5C2 2.5 3 1 4.5 2.5L6 4C6.5 4.5 6 5.5 5.5 6C5 6.5 5.5 7.5 6.5 8.5C7.5 9.5 8.5 10 9 9.5C9.5 9 10.5 8.5 11 9L12.5 10.5C14 12 12.5 13 12.5 13C9.5 15.5 -1.5 4.5 2 2.5Z" fill="#9CA3AF"/>
+            </svg>
+            <span className="font-compact font-normal text-xs text-gray-400">{entry.type}</span>
+            {entry.secretary && (
+              <span className="font-compact font-normal text-xs" style={{ color: '#7C8CE0' }}>· Секретарь ответил</span>
+            )}
+          </div>
         </div>
+        <span className="font-compact font-normal text-sm text-gray-500 shrink-0 min-w-[38px] text-right">{entry.time}</span>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
-        <SecretaryBadge />
-        <span className="font-compact font-normal text-sm text-gray-500 min-w-[38px] text-right">{entry.time}</span>
-      </div>
+
+      {/* Короткие итоги — только у звонков с Интеллектуальной записью */}
+      {entry.shortSummary && (
+        <p
+          className="px-4 pb-3.5 font-compact font-normal text-sm text-gray-900 leading-snug"
+          style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}
+        >
+          {entry.shortSummary}
+        </p>
+      )}
+
+      {/* Статус доставки сообщения Секретарю */}
+      {entry.secretary && (
+        <div className="px-4 py-2.5 flex items-center gap-2 border-t border-gray-100">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={STATUS_VIEW[entry.secretary.status].color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span className="font-compact font-normal text-xs" style={{ color: STATUS_VIEW[entry.secretary.status].color }}>
+            {STATUS_VIEW[entry.secretary.status].label}
+          </span>
+        </div>
+      )}
+
+      {/* Плашка Шумоподавления */}
+      {entry.noiseReduction && (
+        <div className="px-4 py-2.5 flex items-center gap-2 border-t border-gray-100">
+          <EqualizerIcon size={13} />
+          <span className="font-compact font-normal text-xs text-gray-400">Сработало шумоподавление</span>
+        </div>
+      )}
     </button>
   )
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
+
+// ─── Секретарь ────────────────────────────────────────────────────────────────
+
+const STATUS_VIEW: Record<DeliveryStatus, { label: string; color: string; bg: string }> = {
+  delivered: { label: 'Передано абоненту', color: '#8D969F', bg: '#F2F2F7' },
+  read:      { label: 'Абонент прочитал',  color: '#0070E5', bg: '#E8F2FF' },}
+
+function DeliveryBadge({ data }: { data: SecretaryData }) {
+  const v = STATUS_VIEW[data.status]
+  return (
+    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: v.bg }}>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={v.color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <span className="font-compact font-semibold text-xs" style={{ color: v.color }}>
+        {v.label}{data.readAt && data.status !== 'delivered' ? ` · ${data.readAt}` : ''}
+      </span>
+    </div>
+  )
+}
+
+/** Подсвечивает фрагменты, которые Секретарь не разобрал */
+function DialogText({ text }: { text: string }) {
+  const parts = text.split('[неразборчиво]')
+  return (
+    <p className="font-compact font-normal text-base leading-snug">
+      {parts.map((part, i) => (
+        <span key={i}>
+          {part}
+          {i < parts.length - 1 && (
+            <span className="font-semibold" style={{ color: '#E85D26' }}>[неразборчиво]</span>
+          )}
+        </span>
+      ))}
+    </p>
+  )
+}
+
+function SecretaryScreen({ call, onBack }: { call: CallEntry; onBack: () => void }) {
+  const data = call.secretary!
+
+  return (
+    <div className="min-h-screen flex justify-center bg-white">
+      <div className="w-full max-w-app flex flex-col min-h-screen">
+
+        {/* Header */}
+        <div className="px-4 pt-12 pb-3 flex items-center gap-3 bg-white border-b border-gray-100">
+          <button onClick={onBack} className="w-9 h-9 flex items-center justify-center shrink-0">
+            <ArrowLeft size={22} className="text-gray-900" strokeWidth={2} />
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="font-sans font-bold text-base text-gray-900 truncate">{call.phone}</p>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto pb-20 px-4 pt-5">
+
+          <CallMeta call={call} />
+
+          {/* Статус доставки */}
+          <div className="mb-5">
+            <p className="font-compact text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ваше сообщение</p>
+            <DeliveryBadge data={data} />
+            {data.status === 'delivered' && (
+              <p className="font-compact font-normal text-xs text-gray-400 mt-2 leading-snug">
+                Абонент не включил уведомление о прочтении, поэтому время просмотра не показывается
+              </p>
+            )}
+          </div>
+
+          {/* Диалог с секретарём */}
+          <div className="flex flex-col gap-3 mb-5">
+            {data.dialog.map((msg, i) => (
+              <div key={i} className={`flex flex-col gap-0.5 ${msg.author === 'me' ? 'items-end' : 'items-start'}`}>
+                {msg.author === 'bot' && (
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(160deg, #A8B4F0, #7C8CE0)' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 4v4M9 14h.01M15 14h.01"/>
+                      </svg>
+                    </div>
+                    <span className="font-sans font-bold text-sm text-gray-900">Секретарь</span>
+                  </div>
+                )}
+                <div className={`max-w-[78%] px-4 py-3 rounded-2xl ${msg.author === 'bot' ? 'bg-gray-100 rounded-tl-sm' : 'bg-gray-200 rounded-tr-sm'} text-gray-900`}>
+                  <DialogText text={msg.text} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <AssistantPromo accent="secretary" />
+
+        </div>
+
+        <BrowserBar onBack={onBack} />
+
+      </div>
+    </div>
+  )
+}
+
+// ─── Noise-only Screen ───────────────────────────────────────────────────────
+// Звонок без Интеллектуальной записи: метаданные + промо AI Помощника с акцентом на Шумоподавление
+
+function NoiseOnlyScreen({ call, onBack }: { call: CallEntry; onBack: () => void }) {
+  return (
+    <div className="min-h-screen flex justify-center bg-white">
+      <div className="w-full max-w-app flex flex-col min-h-screen">
+
+        {/* Header */}
+        <div className="px-4 pt-12 pb-3 flex items-center gap-3 bg-white border-b border-gray-100">
+          <button onClick={onBack} className="w-9 h-9 flex items-center justify-center shrink-0">
+            <ArrowLeft size={22} className="text-gray-900" strokeWidth={2} />
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="font-sans font-bold text-base text-gray-900 truncate">{call.phone}</p>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto pb-20 px-4 pt-5">
+
+          <CallMeta call={call} />
+
+          <AssistantPromo accent="noise" />
+
+        </div>
+
+        <BrowserBar onBack={onBack} />
+      </div>
+    </div>
+  )
+}
 
 // ─── Loading Screen ──────────────────────────────────────────────────────────
 
@@ -545,15 +813,8 @@ function LoadingScreen({ call, onBack, onReady }: { call: CallEntry; onBack: () 
           <button onClick={onBack} className="w-9 h-9 flex items-center justify-center shrink-0">
             <ArrowLeft size={22} className="text-gray-900" strokeWidth={2} />
           </button>
-          <div
-            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: call.initialsColor }}
-          >
-            <span className="text-white font-sans font-bold text-sm">{call.initials}</span>
-          </div>
           <div className="flex-1 min-w-0">
-            <p className="font-sans font-bold text-base text-gray-900 truncate">{call.name}</p>
-            <p className="font-compact font-normal text-xs text-gray-400">{call.phone}</p>
+            <p className="font-sans font-bold text-base text-gray-900 truncate">{call.phone}</p>
           </div>
           <button className="w-9 h-9 flex items-center justify-center shrink-0">
             <MoreHorizontal size={22} className="text-gray-700" strokeWidth={2} />
@@ -563,62 +824,11 @@ function LoadingScreen({ call, onBack, onReady }: { call: CallEntry; onBack: () 
         {/* Content */}
         <div className="flex-1 overflow-y-auto pb-20 px-4 pt-5">
 
-          {/* Call meta */}
-          <p className="font-compact font-normal text-sm text-gray-400 mb-1">{call.date}</p>
-          <div className="flex items-center gap-2 mb-4">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M2 2C2 2 3 0.5 4.5 2L6 3.5C6.5 4 6 5 5.5 5.5C5 6 5.5 7 6.5 8C7.5 9 8.5 9.5 9 9C9.5 8.5 10.5 8 11 8.5L12.5 10C14 11.5 12.5 12.5 12.5 12.5C9.5 15 -0.5 5 2 2Z" fill="#4B5563"/>
-            </svg>
-            <span className="font-sans font-bold text-base text-gray-900">
-              Входящий звонок{' '}
-              <span className="font-compact font-normal text-base text-gray-400">{call.duration}</span>
-            </span>
+          <CallMeta call={call} />
+
+          <div className="mb-5">
+            <AssistantPromo />
           </div>
-
-          {/* Audio controls */}
-          <div className="flex items-center gap-3 mb-5">
-            <button className="flex items-center gap-2 bg-gray-100 rounded-full px-5 py-2.5">
-              <Play size={13} fill="#1A1A1A" color="#1A1A1A" />
-              <span className="font-sans font-bold text-sm text-gray-900">Слушать</span>
-            </button>
-            <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-              <AlignLeft size={16} className="text-gray-700" strokeWidth={1.8} />
-            </button>
-          </div>
-
-          <div className="border-t border-gray-100 mb-5" />
-
-          {/* Promo card */}
-          <div className="bg-gray-50 rounded-2xl p-4 flex flex-col gap-4 mb-3">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <p className="font-sans font-bold text-base text-gray-900">Подключите VoiceTech</p>
-                <p className="font-compact font-normal text-sm text-gray-400 mt-0.5">Оцените AI Звонки</p>
-              </div>
-              <div className="w-14 h-16 rounded-xl shrink-0 flex items-center justify-center" style={{ background: 'linear-gradient(160deg, #D0D4F0, #B8BEEA)' }}>
-                <svg width="30" height="36" viewBox="0 0 30 36" fill="none">
-                  <rect x="2" y="2" width="26" height="32" rx="5" fill="url(#sgL)" />
-                  <rect x="8" y="16" width="14" height="10" rx="2" fill="white" opacity="0.6" />
-                  <defs>
-                    <linearGradient id="sgL" x1="0" y1="0" x2="30" y2="36" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stopColor="#C8CEED" /><stop offset="100%" stopColor="#9FA8DA" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
-            </div>
-            <button
-              className="w-full bg-white border border-gray-200 rounded-full py-3.5 font-sans font-bold text-sm text-gray-900 uppercase tracking-widest"
-              onClick={() => window.open('https://moskva.mts.ru/personal/mobilnaya-svyaz/uslugi/mobilnaya-svyaz/voicetech', '_blank')}
-            >
-              Попробовать
-            </button>
-          </div>
-
-          {/* Expiry note */}
-          <p className="font-compact font-normal text-xs text-gray-400 text-center mb-5">
-            Детали звонка удалятся через 90 дней
-          </p>
 
           {/* Loading state */}
           <div className="bg-gray-100 rounded-2xl px-4 py-4 mb-4">
@@ -651,6 +861,26 @@ export default function VoiceTech() {
   const [showLogout, setShowLogout] = useState(false)
   const [openCall, setOpenCall] = useState<CallEntry | null>(null)
   const [transcriptReady, setTranscriptReady] = useState(false)
+
+  // Разговор с Секретарём — звонящий сам участник, грузить расшифровку не нужно
+  if (openCall && openCall.secretary) {
+    return (
+      <SecretaryScreen
+        call={openCall}
+        onBack={() => { setOpenCall(null); setTranscriptReady(false) }}
+      />
+    )
+  }
+
+  // Звонок только с Шумоподавлением — расшифровки нет, грузить нечего
+  if (openCall && !openCall.transcript) {
+    return (
+      <NoiseOnlyScreen
+        call={openCall}
+        onBack={() => { setOpenCall(null); setTranscriptReady(false) }}
+      />
+    )
+  }
 
   if (openCall && !transcriptReady) {
     return (
@@ -700,32 +930,7 @@ export default function VoiceTech() {
         <div className="flex-1 bg-[#F0F0F5] rounded-t-[28px] -mt-10 overflow-y-auto pb-20">
           <div className="px-4 pt-4 flex flex-col gap-3">
 
-            {/* Promo */}
-            <div className="bg-white rounded-2xl p-4 flex flex-col gap-4" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <p className="font-sans font-bold text-base text-gray-900">Подключите VoiceTech</p>
-                  <p className="font-compact font-normal text-sm text-gray-400 mt-0.5">Оцените AI Звонки</p>
-                </div>
-                <div className="w-14 h-16 rounded-xl shrink-0 flex items-center justify-center" style={{ background: 'linear-gradient(160deg, #D0D4F0, #B8BEEA)' }}>
-                  <svg width="30" height="36" viewBox="0 0 30 36" fill="none">
-                    <rect x="2" y="2" width="26" height="32" rx="5" fill="url(#sg3)" />
-                    <rect x="8" y="16" width="14" height="10" rx="2" fill="white" opacity="0.6" />
-                    <defs>
-                      <linearGradient id="sg3" x1="0" y1="0" x2="30" y2="36" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stopColor="#C8CEED" /><stop offset="100%" stopColor="#9FA8DA" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </div>
-              </div>
-              <button
-                className="w-full bg-gray-100 rounded-full py-3.5 font-sans font-bold text-sm text-gray-900 uppercase tracking-widest hover:bg-gray-200 transition-colors"
-                onClick={() => window.open('https://moskva.mts.ru/personal/mobilnaya-svyaz/uslugi/mobilnaya-svyaz/voicetech', '_blank')}
-              >
-                Попробовать
-              </button>
-            </div>
+            <AssistantPromo />
 
             {SHARED_CALLS.map(entry => (
               <CallRow key={entry.id} entry={entry} onClick={() => { setTranscriptReady(false); setOpenCall(entry) }} />

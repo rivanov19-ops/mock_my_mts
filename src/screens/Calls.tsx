@@ -572,7 +572,7 @@ function OnboardingFlow({ onDone }: { onDone: () => void }) {
         exit={{ opacity: 0, x: -40 }}
         transition={{ duration: 0.25 }}
       >
-        <div className="w-full max-w-app flex flex-col min-h-screen">
+        <div className="w-full max-w-app flex flex-col h-full">
 
           {step === 0 && <>
             {/* Top bar */}
@@ -586,7 +586,7 @@ function OnboardingFlow({ onDone }: { onDone: () => void }) {
               <div className="w-9"/>
             </div>
             {/* Illustration — full width, fills remaining space */}
-            <div className="flex-1 mx-4 mb-4 rounded-[32px] relative overflow-hidden"
+            <div className="flex-1 min-h-0 mx-4 mb-4 rounded-[32px] relative overflow-hidden"
               style={{ background: 'linear-gradient(145deg, #dde4ff 0%, #c5ceff 40%, #b8c8f8 70%, #d4c5f9 100%)', minHeight: 0 }}>
               <div className="absolute w-56 h-56 rounded-full opacity-25" style={{ background: 'radial-gradient(circle, #fff 0%, transparent 70%)', top: '-10%', left: '-5%' }}/>
               <div className="absolute w-40 h-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #fff 0%, transparent 70%)', bottom: '5%', right: '-5%' }}/>
@@ -682,7 +682,7 @@ function OnboardingFlow({ onDone }: { onDone: () => void }) {
             <div className="flex-1 flex items-center justify-center px-4">
               <PhoneMockup/>
             </div>
-            <div className="px-6 pb-24">
+            <div className="px-6 pb-12">
               <h2 className="font-sans font-black text-2xl mb-2" style={{ color: '#1D2023' }}>Обновили раздел Звонки</h2>
               <p className="font-compact text-sm leading-relaxed mb-6" style={{ color: '#8D969F' }}>
                 Стало удобнее находить вызовы, а привычные функции остались на своих местах
@@ -698,7 +698,6 @@ function OnboardingFlow({ onDone }: { onDone: () => void }) {
                 <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(29,32,35,0.2)' }}/>
               </div>
             </div>
-            <BottomNav/>
           </>}
 
           {step === 2 && <>
@@ -712,7 +711,7 @@ function OnboardingFlow({ onDone }: { onDone: () => void }) {
             <div className="flex-1 flex items-center justify-center px-4">
               <PhoneMockup highlightContacts/>
             </div>
-            <div className="px-6 pb-24">
+            <div className="px-6 pb-12">
               <h2 className="font-sans font-black text-2xl mb-2" style={{ color: '#1D2023' }}>Где найти контакты</h2>
               <p className="font-compact text-sm leading-relaxed mb-6" style={{ color: '#8D969F' }}>
                 Чтобы открыть сохранённые номера, нажмите кнопку в правом верхнем углу
@@ -728,7 +727,6 @@ function OnboardingFlow({ onDone }: { onDone: () => void }) {
                 <div className="w-4 h-1.5 rounded-full" style={{ background: '#1D2023' }}/>
               </div>
             </div>
-            <BottomNav/>
           </>}
 
         </div>
@@ -1598,11 +1596,33 @@ export default function Calls() {
                       style={{ color: '#8D969F' }}>{group.date}</p>
                     <div className="flex flex-col gap-1">
                       {group.calls.map(entry => (
-                        <CallRow
-                          key={entry.id}
-                          entry={entry}
-                          onClick={() => setOpenEntry(entry)}
-                        />
+                        <div key={entry.id}>
+                          <CallRow
+                            entry={entry}
+                            onClick={() => setOpenEntry(entry)}
+                          />
+                          {entry.id === '2' && (
+                            <div className="mt-2 rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #E30611 0%, #B80010 100%)', boxShadow: '0 2px 12px rgba(227,6,17,0.22)' }}>
+                              <div className="p-4">
+                                <div className="flex items-start gap-3">
+                                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                                    <span className="text-[18px]">🎙</span>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-sans font-bold text-[13px] text-white leading-snug">Секретарь ответил — хотите ещё и запись?</p>
+                                    <p className="font-compact text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.75)' }}>Секретарь+ включает оба сервиса в одной подписке</p>
+                                    <button className="mt-2.5 px-3.5 py-1.5 rounded-full font-compact font-semibold text-[12px]" style={{ background: 'white', color: '#E30611' }}>
+                                      Попробовать
+                                    </button>
+                                  </div>
+                                  <button className="mt-0.5 active:opacity-60" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </div>

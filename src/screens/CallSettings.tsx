@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, ChevronRight, X } from 'lucide-react'
 import { BottomNav } from '../components/layout/BottomNav'
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -123,6 +123,36 @@ function Section({
 
 export default function CallSettings() {
   const navigate = useNavigate()
+  const [showContactModal, setShowContactModal] = useState(false)
+  const [contactEmail, setContactEmail] = useState('')
+  const [contactName, setContactName] = useState('')
+  const [contactCategory, setContactCategory] = useState('')
+  const [contactText, setContactText] = useState('')
+  const [contactSent, setContactSent] = useState(false)
+
+  const handleContactClose = () => {
+    setShowContactModal(false)
+    setContactSent(false)
+    setContactEmail('')
+    setContactName('')
+    setContactCategory('')
+    setContactText('')
+  }
+
+  const handleContactSubmit = async () => {
+    if (!contactEmail || !contactCategory || !contactText) return
+    await fetch('https://formspree.io/f/mbdbwdkl', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        email: contactEmail,
+        name: contactName || '—',
+        topic: contactCategory === 'idea' ? 'Идеи и пожелания' : 'Сообщить о проблеме',
+        message: contactText,
+      }),
+    })
+    setContactSent(true)
+  }
 
   return (
     <div className="min-h-screen flex justify-center" style={{ background: '#F2F3F7' }}>
@@ -165,6 +195,11 @@ export default function CallSettings() {
               badge={<SparkleBadge />}
             />
             <Divider />
+            <ToggleRow
+              title="Уведомлять о прочтении"
+              subtitle="Звонивший увидит, что вы прослушали его сообщение"
+            />
+            <Divider />
             <ArrowRow title="Уведомления" subtitle="Пуш и СМС" />
             <Divider />
             <ArrowRow title="Ответы Секретаря" onPress={() => navigate('/calls/secretary-answers')} />
@@ -197,6 +232,142 @@ export default function CallSettings() {
               />
             </div>
           </div>
+
+          {/* Связаться с VoiceTech */}
+          <div className="mx-4">
+            <button
+              onClick={() => setShowContactModal(true)}
+              className="block w-full rounded-3xl py-4 bg-white active:bg-gray-50 transition-colors text-center"
+              style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}
+            >
+              <span
+                className="font-sans font-black text-[13px] tracking-[0.08em] uppercase"
+                style={{ color: '#0070E5' }}
+              >
+                Связаться с VoiceTech
+              </span>
+            </button>
+          </div>
+
+          {/* Модалка "Связаться с командой" */}
+          {showContactModal && (
+            <div
+              className="fixed inset-0 z-50 flex items-end justify-center"
+              style={{ background: 'rgba(0,0,0,0.4)' }}
+              onClick={() => setShowContactModal(false)}
+            >
+              <div
+                className="w-full max-w-app bg-white rounded-t-3xl px-5 pt-5 pb-10"
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Крестик */}
+                <div className="flex justify-end mb-2">
+                  <button
+                    onClick={handleContactClose}
+                    className="w-8 h-8 flex items-center justify-center rounded-full"
+                    style={{ background: '#F2F3F7' }}
+                  >
+                    <X size={16} strokeWidth={2.5} style={{ color: '#1D2023' }} />
+                  </button>
+                </div>
+
+                {contactSent ? (
+                  /* Экран подтверждения */
+                  <div className="flex flex-col items-center py-6">
+                    <div
+                      className="w-14 h-14 rounded-full flex items-center justify-center mb-4"
+                      style={{ background: '#E8F5E9' }}
+                    >
+                      <span style={{ fontSize: 28 }}>✓</span>
+                    </div>
+                    <p className="font-sans font-bold text-[17px] mb-1" style={{ color: '#1D2023' }}>
+                      Сообщение отправлено
+                    </p>
+                    <p className="font-sans text-[13px] text-center" style={{ color: '#8D969F' }}>
+                      Мы ответим на {contactEmail}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Header */}
+                    <div className="mb-5">
+                      <p className="font-sans font-bold text-[17px]" style={{ color: '#1D2023' }}>
+                        Свяжитесь с командой
+                      </p>
+                      <p className="font-sans text-[13px] mt-0.5" style={{ color: '#8D969F' }}>
+                        в течение суток ответит живой человек
+                      </p>
+                    </div>
+
+                    {/* Email */}
+                    <div className="mb-3">
+                      <input
+                        type="email"
+                        value={contactEmail}
+                        onChange={e => setContactEmail(e.target.value)}
+                        placeholder="e-mail для ответа"
+                        className="w-full rounded-2xl px-4 py-3 font-sans text-[15px]"
+                        style={{ background: '#F2F3F7', color: '#1D2023', border: 'none', outline: 'none' }}
+                      />
+                    </div>
+
+                    {/* Имя (необязательное) */}
+                    <div className="mb-3">
+                      <input
+                        type="text"
+                        value={contactName}
+                        onChange={e => setContactName(e.target.value)}
+                        placeholder="Ваше имя"
+                        className="w-full rounded-2xl px-4 py-3 font-sans text-[15px]"
+                        style={{ background: '#F2F3F7', color: '#1D2023', border: 'none', outline: 'none' }}
+                      />
+                    </div>
+
+                    {/* Дропдаун */}
+                    <div className="mb-3">
+                      <select
+                        value={contactCategory}
+                        onChange={e => setContactCategory(e.target.value)}
+                        className="w-full rounded-2xl px-4 py-3 font-sans text-[15px] appearance-none"
+                        style={{
+                          background: '#F2F3F7',
+                          color: contactCategory ? '#1D2023' : '#8D969F',
+                          border: 'none',
+                          outline: 'none',
+                        }}
+                      >
+                        <option value="" disabled>Выберите тему</option>
+                        <option value="idea">Идеи и пожелания</option>
+                        <option value="problem">Сообщить о проблеме</option>
+                      </select>
+                    </div>
+
+                    {/* Текстовое поле */}
+                    <div className="mb-4">
+                      <textarea
+                        value={contactText}
+                        onChange={e => setContactText(e.target.value)}
+                        placeholder="Опишите подробнее..."
+                        rows={4}
+                        className="w-full rounded-2xl px-4 py-3 font-sans text-[15px] resize-none"
+                        style={{ background: '#F2F3F7', color: '#1D2023', border: 'none', outline: 'none' }}
+                      />
+                    </div>
+
+                    {/* Кнопка отправить */}
+                    <button
+                      onClick={handleContactSubmit}
+                      disabled={!contactEmail || !contactCategory || !contactText}
+                      className="w-full rounded-2xl py-4 font-sans font-bold text-[15px] text-white transition-opacity"
+                      style={{ background: '#0070E5', opacity: contactEmail && contactCategory && contactText ? 1 : 0.4 }}
+                    >
+                      Отправить
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Настройки Мой МТС */}
           <div className="mx-4">
