@@ -36,6 +36,12 @@ export default function Placeholder() {
           >
             → Open VoiceTech
           </button>
+          <button
+            onClick={() => navigate('/context')}
+            className="text-mts-red text-sm font-medium underline"
+          >
+            → Мой Контекст
+          </button>
         </div>
       </div>
     </div>

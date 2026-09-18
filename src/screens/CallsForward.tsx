@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, X, Check, FileText, Search, CornerUpRight, MessageCircle, Phone } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { appHome } from '../core/appHome'
 
 // ─── Пересылка из мессенджера · M1 интеграции «Моего Контекста» ───────────────
 // Третий источник графа. Первый уровень доступа — самый узкий: мы не читаем
@@ -722,7 +723,7 @@ export default function CallsForward() {
 
   const forwarded = CHAT.filter(m => selected.includes(m.id))
 
-  const toFeed = () => navigate('/calls/tobe?tab=КОНТЕКСТ')
+  const toFeed = () => navigate(`${appHome()}?tab=КОНТЕКСТ`)
 
   if (screen === 'connect') return <ConnectScreen onOpen={() => setScreen('chat')} onBack={toFeed}/>
   if (screen === 'card') return <ContactCard onBack={toFeed}/>

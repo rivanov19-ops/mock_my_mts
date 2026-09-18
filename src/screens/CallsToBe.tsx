@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, X, Grid3x3, LayoutGrid, Play, ArrowLeft, MoreHorizontal, ThumbsUp, ThumbsDown, Bell, FileText, Mic, MessageCircle } from 'lucide-react'
+import { Settings, X, Grid3x3, LayoutGrid, Play, ArrowLeft, MoreHorizontal, ThumbsUp, ThumbsDown, Bell, FileText, Mic, MessageCircle, Search } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { BottomNav } from '../components/layout/BottomNav'
+import { ContextTabBar, ContextSettings, type ContextTab } from './context/ContextChrome'
+import { setAppHome } from '../core/appHome'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -3196,7 +3198,7 @@ function avatarGradientForContact(color: string) {
   return `linear-gradient(180deg, ${color}99, ${color})`
 }
 
-function ContactsScreen({ onBack }: { onBack: () => void }) {
+function ContactsScreen({ onBack }: { onBack?: () => void }) {
   const [query, setQuery] = useState('')
 
   const named = CONTACTS_DATA.filter(c => !c.phone).sort((a, b) => a.name.localeCompare(b.name, 'ru'))
@@ -3226,9 +3228,12 @@ function ContactsScreen({ onBack }: { onBack: () => void }) {
 
         {/* Header */}
         <div className="flex items-center gap-3 px-4 pt-12 pb-3 bg-white">
-          <button onClick={onBack} className="w-9 h-9 flex items-center justify-center shrink-0 active:opacity-60">
-            <ArrowLeft size={22} strokeWidth={2} style={{ color: '#1D2023' }}/>
-          </button>
+          {/* Во вкладке приложения «Мой Контекст» возвращаться некуда — стрелки нет */}
+          {onBack && (
+            <button onClick={onBack} className="w-9 h-9 flex items-center justify-center shrink-0 active:opacity-60">
+              <ArrowLeft size={22} strokeWidth={2} style={{ color: '#1D2023' }}/>
+            </button>
+          )}
           <h1 className="font-sans font-black text-xl flex-1" style={{ color: '#1D2023' }}>Контакты</h1>
           <span className="font-compact text-sm" style={{ color: '#8D969F' }}>{filteredNamed.length + filteredNumbers.length}</span>
         </div>
@@ -3255,7 +3260,7 @@ function ContactsScreen({ onBack }: { onBack: () => void }) {
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" style={{ paddingBottom: onBack ? 0 : 96 }}>
           {filteredNamed.length > 0 && (
             <>
               {!query && <div className="px-4 pt-2 pb-1"><p className="font-compact font-semibold text-xs uppercase tracking-wide" style={{ color: '#8D969F' }}>Контакты</p></div>}
@@ -3285,14 +3290,24 @@ function ContactsScreen({ onBack }: { onBack: () => void }) {
 
 type DetailScreen = 'details' | 'transcript'
 
-export default function CallsToBe() {
+// app="context" — тот же экран как главная отдельного приложения «Мой Контекст»:
+// без вкладок услуг МТС и каталога, диктофон в таббаре, поиск в шапке
+export default function CallsToBe({ app = 'mts' }: { app?: 'mts' | 'context' }) {
   const navigate = useNavigate()
+  const isCtx = app === 'context'
+  const home = isCtx ? '/context' : '/calls/tobe'
+  const FILTERS: FilterTab[] = isCtx ? ['Все', 'КОНТЕКСТ'] : ['Все', 'КОНТЕКСТ', 'Записи', 'Секретарь']
+  // ?view=search|contacts|settings — открыть приложение сразу на нужном экране (показы, скриншоты)
+  const view = isCtx ? new URLSearchParams(window.location.search).get('view') : null
+  const [ctxTab, setCtxTab] = useState<ContextTab>(view === 'search' ? 'search' : 'home')
+  const [showCtxSettings, setShowCtxSettings] = useState(view === 'settings')
+  const [query, setQuery] = useState('')
+  const searchOpen = isCtx && ctxTab === 'search'
   const [bannerVisible, setBannerVisible] = useState(true)
   // ?tab=КОНТЕКСТ — открыть ленту сразу на нужной вкладке (показы, скриншоты)
   const [activeFilter, setActiveFilter] = useState<FilterTab>(() => {
     const t = new URLSearchParams(window.location.search).get('tab')
-    const tabs: FilterTab[] = ['Все', 'КОНТЕКСТ', 'Записи', 'Секретарь']
-    return tabs.find(x => x.toLowerCase() === (t ?? '').toLowerCase()) ?? 'Все'
+    return FILTERS.find(x => x.toLowerCase() === (t ?? '').toLowerCase()) ?? 'Все'
   })
   const [openEntry, setOpenEntry] = useState<CallEntry | null>(null)
   const [detailScreen, setDetailScreen] = useState<DetailScreen>('details')
@@ -3306,9 +3321,20 @@ export default function CallsToBe() {
   const [protectedEntry, setProtectedEntry] = useState<CallEntry | null>(null)
   const [safeEntry, setSafeEntry] = useState<CallEntry | null>(null)
   const [incomingEntry, setIncomingEntry] = useState<CallEntry | null>(null)
-  const [showContacts, setShowContacts] = useState(false)
+  const [showContacts, setShowContacts] = useState(view === 'contacts')
 
   const dismissAlert = () => { setAlertVisible(false); setAlertModalOpen(false) }
+
+  // Общие экраны (диктофон, заметка, пересылка) возвращаются туда, откуда открыты
+  useEffect(() => { setAppHome(home) }, [home])
+
+  // Отдельное приложение — и во вкладке браузера называется своим именем
+  useEffect(() => {
+    if (!isCtx) return
+    const prev = document.title
+    document.title = 'Мой Контекст'
+    return () => { document.title = prev }
+  }, [isCtx])
 
   // Диплинк для показов и скриншотов: /calls/tobe?open=diary | ?open=<id звонка>
   useEffect(() => {
@@ -3321,6 +3347,16 @@ export default function CallsToBe() {
 
   if (showContacts) {
     return <ContactsScreen onBack={() => setShowContacts(false)}/>
+  }
+  if (showCtxSettings) {
+    return (
+      <div className="min-h-screen flex justify-center" style={{ background: '#F2F3F7' }}>
+        <div className="w-full max-w-app min-h-screen">
+          <ContextSettings onBack={() => setShowCtxSettings(false)}
+            onMessenger={() => navigate('/calls/forward?screen=connect')}/>
+        </div>
+      </div>
+    )
   }
   if (showDiary) {
     return <DiaryScreen onBack={() => setShowDiary(false)}/>
@@ -3397,7 +3433,11 @@ export default function CallsToBe() {
   }
 
   const banner = BANNERS[activeFilter]
+  // Поиск в шапке приложения «Мой Контекст» — по имени и теме звонка
+  const q = query.trim().toLowerCase()
   const filteredLog = getFilteredLog(activeFilter)
+    .map(g => ({ ...g, calls: q ? g.calls.filter(c => `${c.name} ${c.topic ?? ''}`.toLowerCase().includes(q)) : g.calls }))
+    .filter(g => g.calls.length > 0)
   const isCardView = activeFilter === 'Записи' || activeFilter === 'Секретарь'
 
   return (
@@ -3416,6 +3456,21 @@ export default function CallsToBe() {
               <h1 className="font-sans font-black text-[1.75rem] leading-tight" style={{ color: '#1D2023' }}>Звонки</h1>
               <p className="font-compact font-normal text-sm" style={{ color: '#8D969F' }}>{PHONE_NUMBER}</p>
             </div>
+            {isCtx ? (
+              <div className="flex items-center gap-2 mt-1">
+                <button onClick={() => setShowContacts(true)} className="w-9 h-9 rounded-xl flex items-center justify-center active:opacity-70 transition-opacity" style={{ background: 'rgba(29,32,35,0.07)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D2023" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                </button>
+                <button onClick={() => setShowCtxSettings(true)} className="w-9 h-9 rounded-xl flex items-center justify-center active:opacity-70 transition-opacity" style={{ background: 'rgba(29,32,35,0.07)' }}>
+                  <Settings size={18} strokeWidth={2} style={{ color: '#1D2023' }}/>
+                </button>
+              </div>
+            ) : (
             <div className="flex items-center gap-2 mt-1">
               <button onClick={() => navigate('/calls')} className="flex items-center active:opacity-50 transition-opacity">
                 <span className="font-compact text-xs underline underline-offset-2" style={{ color: 'rgba(29,32,35,0.35)' }}>AsIs</span>
@@ -3440,11 +3495,26 @@ export default function CallsToBe() {
                 <Settings size={18} strokeWidth={2} style={{ color: '#1D2023' }}/>
               </button>
             </div>
+            )}
           </div>
+          {isCtx && searchOpen && (
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-3 bg-white" style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.06)' }}>
+              <Search size={16} strokeWidth={2} style={{ color: '#8D969F' }}/>
+              <input autoFocus value={query} onChange={e => setQuery(e.target.value)}
+                placeholder="Люди, темы разговоров"
+                className="flex-1 bg-transparent outline-none font-compact text-sm" style={{ color: '#1D2023' }}/>
+              {query && (
+                <button onClick={() => setQuery('')} className="active:opacity-60">
+                  <X size={14} strokeWidth={2.2} style={{ color: '#8D969F' }}/>
+                </button>
+              )}
+            </div>
+          )}
+          {/* ↑ поле поиска открывается вкладкой «Поиск» в таббаре */}
           {/* Ряд фильтров прокручивается: «Мой контекст» длиннее прежнего
               «Полезного» и вчетвером они уже не влезают в ширину экрана */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4">
-            {(['Все', 'КОНТЕКСТ', 'Записи', 'Секретарь'] as FilterTab[]).map(tab => (
+            {FILTERS.map(tab => (
               <button key={tab} onClick={() => { setActiveFilter(tab); setBannerVisible(true) }}
                 className="rounded-full px-4 py-1.5 font-compact font-semibold text-sm transition-colors whitespace-nowrap shrink-0"
                 style={{
@@ -3462,13 +3532,13 @@ export default function CallsToBe() {
           <div className="px-2 pt-3 flex flex-col gap-[6px]">
 
             {/* Дневник звонков — анонс недельного свода, вкладка «Все» */}
-            {activeFilter === 'Все' && diaryVisible && (
+            {activeFilter === 'Все' && diaryVisible && !q && (
               <DiaryCard onOpen={() => setShowDiary(true)} onDismiss={() => setDiaryVisible(false)}/>
             )}
 
             {/* Вход в «Мой Контекст» — вкладка про людей и договорённости,
                 поэтому первым идёт сам контекст, а не отмеченные звонки */}
-            {activeFilter === 'КОНТЕКСТ' && (
+            {activeFilter === 'КОНТЕКСТ' && !q && (
               <div className="bg-white rounded-2xl p-4 mb-1" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EDE9FE' }}>
@@ -3482,15 +3552,18 @@ export default function CallsToBe() {
                   </div>
                 </div>
 
-                <button onClick={() => navigate('/calls/note?rec=1')}
-                  className="w-full rounded-xl py-3 font-sans font-bold text-[15px] text-white active:opacity-85 transition-opacity flex items-center justify-center gap-2"
-                  style={{ background: '#1D2023' }}>
-                  <Mic size={16} strokeWidth={2.4}/>
-                  Записать заметку
-                </button>
+                {/* В приложении «Мой Контекст» запись — центральная кнопка таббара */}
+                {!isCtx && (
+                  <button onClick={() => navigate('/calls/note?rec=1')}
+                    className="w-full rounded-xl py-3 font-sans font-bold text-[15px] text-white active:opacity-85 transition-opacity flex items-center justify-center gap-2 mb-3"
+                    style={{ background: '#1D2023' }}>
+                    <Mic size={16} strokeWidth={2.4}/>
+                    Записать заметку
+                  </button>
+                )}
 
                 <button onClick={() => navigate('/calls/dictaphone')}
-                  className="w-full flex items-center gap-2.5 pt-3 mt-3 active:opacity-60"
+                  className="w-full flex items-center gap-2.5 pt-3 active:opacity-60"
                   style={{ borderTop: '1px solid #F2F2F7' }}>
                   <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
                     style={{ background: 'linear-gradient(180deg, #FF950099, #FF9500)' }}>
@@ -3685,8 +3758,8 @@ export default function CallsToBe() {
           </div>
         </div>
 
-        {/* Dialpad FAB */}
-        <div className="fixed bottom-20 right-4 max-w-app w-full pointer-events-none" style={{ maxWidth: '430px' }}>
+        {/* Dialpad FAB — только в Мой МТС; в «Моём Контексте» центр внизу занят диктофоном */}
+        {!isCtx && <div className="fixed bottom-20 right-4 max-w-app w-full pointer-events-none" style={{ maxWidth: '430px' }}>
           <div className="flex justify-end pointer-events-auto">
             <button className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #4A5285, #1A1D38)' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -3694,9 +3767,11 @@ export default function CallsToBe() {
               </svg>
             </button>
           </div>
-        </div>
+        </div>}
 
-        <BottomNav/>
+        {isCtx
+          ? <ContextTabBar active={ctxTab} onTab={t => { setCtxTab(t); setQuery('') }} onRecord={() => navigate('/calls/note?rec=1')}/>
+          : <BottomNav/>}
 
         {/* Delay alert modal */}
         <AnimatePresence>

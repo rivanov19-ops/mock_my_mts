@@ -34,6 +34,8 @@ export default function App() {
       <Route path="/money" element={<Money />} />
       <Route path="/calls" element={<Calls />} />
       <Route path="/calls/tobe" element={<CallsToBe />} />
+      {/* Отдельное приложение «Мой Контекст» — главный экран на базе ленты звонков */}
+      <Route path="/context" element={<CallsToBe key="context" app="context" />} />
       <Route path="/calls/dictaphone" element={<CallsDictaphone />} />
       <Route path="/calls/note" element={<CallsFreeNote />} />
       <Route path="/calls/forward" element={<CallsForward />} />

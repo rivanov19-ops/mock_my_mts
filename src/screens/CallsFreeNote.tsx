@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, X, Mic, Square, Check, ChevronDown, AlertCircle } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { appHome } from '../core/appHome'
 
 // ─── Свободная голосовая заметка · этап 2 «Моего Контекста» ───────────────────
 // Ветка /calls/dictaphone (заметка с карточки контакта) не трогается.
@@ -689,7 +690,7 @@ export default function CallsFreeNote() {
   // ссылке предыдущей записью истории может оказаться этот же экран, и тогда
   // крестик выглядит нерабочим
   const closeRecorder = () => {
-    if (params.get('rec') === '1') navigate('/calls/tobe', { replace: true })
+    if (params.get('rec') === '1') navigate(appHome(), { replace: true })
     else setScreen('home')
   }
 
@@ -716,7 +717,7 @@ export default function CallsFreeNote() {
 
         <div className="px-4 pt-12 pb-4 bg-white shrink-0">
           <div className="flex items-center gap-3 mb-3">
-            <button onClick={() => navigate('/calls/tobe')} className="w-9 h-9 flex items-center justify-center shrink-0 -ml-2 active:opacity-60">
+            <button onClick={() => navigate(appHome())} className="w-9 h-9 flex items-center justify-center shrink-0 -ml-2 active:opacity-60">
               <ArrowLeft size={22} strokeWidth={2} style={{ color: '#1D2023' }}/>
             </button>
             <div className="flex-1"/>

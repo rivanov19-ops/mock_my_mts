@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, X, Mic, Square, Check } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { appHome } from '../core/appHome'
 
 // ─── Голосовая заметка · этап 1 «Моего Контекста» ─────────────────────────────
 // Отдельная ветка мока, основной экран /calls/tobe не трогает.
@@ -490,7 +491,7 @@ export default function CallsDictaphone() {
         {/* Header */}
         <div className="px-4 pt-12 pb-4 bg-white shrink-0">
           <div className="flex items-center gap-3 mb-4">
-            <button onClick={() => navigate('/calls/tobe')} className="w-9 h-9 flex items-center justify-center shrink-0 -ml-2 active:opacity-60">
+            <button onClick={() => navigate(appHome())} className="w-9 h-9 flex items-center justify-center shrink-0 -ml-2 active:opacity-60">
               <ArrowLeft size={22} strokeWidth={2} style={{ color: '#1D2023' }}/>
             </button>
             <div className="flex-1"/>
