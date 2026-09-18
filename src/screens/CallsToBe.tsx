@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, X, Grid3x3, LayoutGrid, Play, ArrowLeft, MoreHorizontal, ThumbsUp, ThumbsDown, Bell, FileText, Mic, MessageCircle } from 'lucide-react'
+import { Settings, X, Grid3x3, LayoutGrid, Play, ArrowLeft, MoreHorizontal, ThumbsUp, ThumbsDown, Bell, FileText, Mic, MessageCircle, Search } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { BottomNav } from '../components/layout/BottomNav'
 import { ContextTabBar, ContextSettings, type ContextTab } from './context/ContextChrome'
@@ -1125,7 +1125,8 @@ function ContextMark({ count = 0 }: { count?: number }) {
   )
 }
 
-function CallRow({ entry, onClick }: { entry: CallEntry; onClick?: () => void }) {
+// showTopic — у звонков с Интеллектуальной записью (не Секретаря) показать, о чём был разговор
+function CallRow({ entry, onClick, showTopic }: { entry: CallEntry; onClick?: () => void; showTopic?: boolean }) {
   return (
     <button
       onClick={onClick}
@@ -1145,6 +1146,9 @@ function CallRow({ entry, onClick }: { entry: CallEntry; onClick?: () => void })
           <CallTypeIcon callType={entry.callType}/>
           <p className="font-compact text-[12px]" style={{ color: '#8D969F' }}>{entry.typeLabel}</p>
         </div>
+        {showTopic && entry.hasRecording && entry.callType !== 'secretary' && !entry.notRecorded && entry.topic && (
+          <p className="font-compact text-[13px] leading-snug truncate mt-0.5" style={{ color: '#1D2023' }}>{entry.topic}</p>
+        )}
       </div>
     </button>
   )
@@ -3304,6 +3308,8 @@ export default function CallsToBe({ app = 'mts' }: { app?: 'mts' | 'context' }) 
   const [ctxTab, setCtxTab] = useState<ContextTab>(
     view === 'context' || params.get('tab')?.toLowerCase() === 'контекст' ? 'context' : 'home')
   const [showCtxSettings, setShowCtxSettings] = useState(view === 'settings')
+  const [query, setQuery] = useState('')
+  const [searchFocused, setSearchFocused] = useState(false)
   const [bannerVisible, setBannerVisible] = useState(true)
   // ?tab=КОНТЕКСТ — открыть ленту сразу на нужной вкладке (показы, скриншоты)
   const [filterState, setActiveFilter] = useState<FilterTab>(() => {
@@ -3436,7 +3442,13 @@ export default function CallsToBe({ app = 'mts' }: { app?: 'mts' | 'context' }) 
   }
 
   const banner = BANNERS[activeFilter]
+  // Строка поиска в шапке «Моего Контекста» — по имени и теме разговора
+  const q = query.trim().toLowerCase()
+  // Грубая поправка на окончания: «смета» находит «смету», «дача» — «дачу»
+  const stem = q.length >= 4 ? q.slice(0, -1) : q
   const filteredLog = getFilteredLog(activeFilter)
+    .map(g => ({ ...g, calls: q ? g.calls.filter(c => `${c.name} ${c.topic ?? ''}`.toLowerCase().includes(stem)) : g.calls }))
+    .filter(g => g.calls.length > 0)
   const isCardView = activeFilter === 'Записи' || activeFilter === 'Секретарь'
 
   return (
@@ -3498,6 +3510,35 @@ export default function CallsToBe({ app = 'mts' }: { app?: 'mts' | 'context' }) 
             </div>
             )}
           </div>
+          {isCtx && (
+            <div className="mt-3">
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white" style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.06)' }}>
+                <Search size={16} strokeWidth={2} style={{ color: '#8D969F' }}/>
+                <input value={query} onChange={e => setQuery(e.target.value)}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+                  placeholder="Люди, договорённости, темы"
+                  className="flex-1 bg-transparent outline-none font-compact text-sm" style={{ color: '#1D2023' }}/>
+                {query && (
+                  <button onClick={() => setQuery('')} className="active:opacity-60">
+                    <X size={14} strokeWidth={2.2} style={{ color: '#8D969F' }}/>
+                  </button>
+                )}
+              </div>
+              {/* Подсказки — пока строка пустая и в фокусе: подсказывают, что искать можно не только по имени */}
+              {searchFocused && !query && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {['Сергей', 'смета', 'пятница', 'дача', 'ресторан', 'курьер'].map(h => (
+                    <button key={h} onMouseDown={e => e.preventDefault()} onClick={() => setQuery(h)}
+                      className="font-compact text-[13px] px-3 py-1 rounded-full active:opacity-60"
+                      style={{ background: 'white', color: '#1D2023', border: '1px solid #E5E5EA' }}>
+                      {h}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {/* Ряд фильтров прокручивается: «Мой контекст» длиннее прежнего
               «Полезного» и вчетвером они уже не влезают в ширину экрана */}
           {!isCtx && <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4">
@@ -3519,13 +3560,13 @@ export default function CallsToBe({ app = 'mts' }: { app?: 'mts' | 'context' }) 
           <div className="px-2 pt-3 flex flex-col gap-[6px]">
 
             {/* Дневник звонков — анонс недельного свода, вкладка «Все» */}
-            {activeFilter === 'Все' && diaryVisible && (
+            {activeFilter === 'Все' && diaryVisible && !q && (
               <DiaryCard onOpen={() => setShowDiary(true)} onDismiss={() => setDiaryVisible(false)}/>
             )}
 
             {/* Вход в «Мой Контекст» — вкладка про людей и договорённости,
                 поэтому первым идёт сам контекст, а не отмеченные звонки */}
-            {activeFilter === 'КОНТЕКСТ' && (
+            {activeFilter === 'КОНТЕКСТ' && !q && (
               <div className="bg-white rounded-2xl p-4 mb-1" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EDE9FE' }}>
@@ -3649,6 +3690,13 @@ export default function CallsToBe({ app = 'mts' }: { app?: 'mts' | 'context' }) 
               </div>
             )}
 
+            {q && filteredLog.length === 0 && (
+              <div className="flex flex-col items-center pt-16 gap-1">
+                <p className="font-sans font-semibold text-base" style={{ color: '#1D2023' }}>Ничего не нашли</p>
+                <p className="font-compact text-sm" style={{ color: '#8D969F' }}>Попробуйте имя или тему разговора</p>
+              </div>
+            )}
+
             {filteredLog.map((group, groupIndex) => (
               <div key={group.date}>
                 <p className="font-compact font-normal text-[11px] font-semibold px-1 mb-1.5 mt-1" style={{ color: '#8D969F', letterSpacing: '0.4px', textTransform: 'uppercase' }}>{group.date}</p>
@@ -3718,6 +3766,7 @@ export default function CallsToBe({ app = 'mts' }: { app?: 'mts' | 'context' }) 
                       ) : (
                         <CallRow
                           entry={entry}
+                          showTopic={isCtx}
                           onClick={
                             entry.id === '1' ? () => { setDetailScreen('details'); setOpenEntry(entry) } :
                             entry.id === '2' ? () => setSecretaryEntry(entry) :
@@ -3757,7 +3806,7 @@ export default function CallsToBe({ app = 'mts' }: { app?: 'mts' | 'context' }) 
         </div>}
 
         {isCtx
-          ? <ContextTabBar active={ctxTab} onTab={setCtxTab} onRecord={() => navigate('/calls/note?rec=1')}/>
+          ? <ContextTabBar active={ctxTab} onTab={t => { setCtxTab(t); setQuery('') }} onRecord={() => navigate('/calls/note?rec=1')}/>
           : <BottomNav/>}
 
         {/* Delay alert modal */}
