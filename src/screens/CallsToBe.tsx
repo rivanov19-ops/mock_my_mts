@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, X, Grid3x3, Play, ArrowLeft, MoreHorizontal, ThumbsUp, ThumbsDown, Bell, FileText } from 'lucide-react'
+import { Settings, X, Grid3x3, LayoutGrid, Play, ArrowLeft, MoreHorizontal, ThumbsUp, ThumbsDown, Bell, FileText, Mic, MessageCircle } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { BottomNav } from '../components/layout/BottomNav'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type CallType = 'outgoing' | 'incoming' | 'secretary' | 'safe' | 'protected' | 'blocked'
-type FilterTab = 'Все' | 'Полезное' | 'Записи' | 'Секретарь'
+type FilterTab = 'Все' | 'КОНТЕКСТ' | 'Записи' | 'Секретарь'
 
 interface SummaryBlock { title: string; content: string }
 interface SummaryAction { type: 'reminder' | 'share'; text: string }
@@ -981,8 +981,10 @@ const SECRETARY_LOG: { date: string; calls: CallEntry[] }[] = [
 function getFilteredLog(tab: FilterTab) {
   if (tab === 'Записи') return RECORDING_LOG
   if (tab === 'Секретарь') return SECRETARY_LOG
-  if (tab === 'Полезное') return CALL_LOG
-    .map(g => ({ ...g, calls: g.calls.filter(c => c.favorite) }))
+  // Во вкладке «КОНТЕКСТ» только разговоры, из которых что-то легло в контекст:
+  // отметка «в избранном» для этого не годится — она про другое намерение
+  if (tab === 'КОНТЕКСТ') return CALL_LOG
+    .map(g => ({ ...g, calls: g.calls.filter(c => c.context) }))
     .filter(g => g.calls.length > 0)
   return CALL_LOG
 }
@@ -2047,7 +2049,7 @@ function DetailsScreen({ entry, onBack, onTranscript, summaryState = 'visible' }
                     <path d="M2 5l2.5 2.5 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <span className="font-compact text-[14px] text-white">Звонок добавлен в Полезное</span>
+                <span className="font-compact text-[14px] text-white">Звонок добавлен в Мой контекст</span>
               </div>
             </motion.div>
           )}
@@ -2333,7 +2335,7 @@ function SecretaryScreen({ entry, onBack }: { entry: CallEntry; onBack: () => vo
                     <path d="M2 5l2.5 2.5 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <span className="font-compact text-[14px] text-white">Звонок добавлен в Полезное</span>
+                <span className="font-compact text-[14px] text-white">Звонок добавлен в Мой контекст</span>
               </div>
             </motion.div>
           )}
@@ -2850,7 +2852,7 @@ function SafeDetailScreen({ entry, onBack }: { entry: CallEntry; onBack: () => v
                     <path d="M2 5l2.5 2.5 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <span className="font-compact text-[14px] text-white">Звонок добавлен в Полезное</span>
+                <span className="font-compact text-[14px] text-white">Звонок добавлен в Мой контекст</span>
               </div>
             </motion.div>
           )}
@@ -3164,7 +3166,7 @@ function BlockedDetailScreen({ entry, onBack }: { entry: CallEntry; onBack: () =
 
 const BANNERS: Record<FilterTab, { title: string; subtitle: string; icon: 'secretary' | 'voicemail' }> = {
   'Все':       { title: 'Секретарь+', subtitle: 'Всё нужное в одной подписке', icon: 'secretary' },
-  'Полезное':  { title: 'Секретарь+', subtitle: 'Всё нужное в одной подписке', icon: 'secretary' },
+  'КОНТЕКСТ':  { title: 'Секретарь+', subtitle: 'Всё нужное в одной подписке', icon: 'secretary' },
   'Записи':    { title: 'Шумоподавление', subtitle: 'ИИ в реальном времени уберёт из звонка посторонние звуки', icon: 'voicemail' },
   'Секретарь': { title: 'Интеллектуальная запись', subtitle: 'Запись и расшифровка звонков, краткие итоги разговоров', icon: 'voicemail' },
 }
@@ -3286,7 +3288,12 @@ type DetailScreen = 'details' | 'transcript'
 export default function CallsToBe() {
   const navigate = useNavigate()
   const [bannerVisible, setBannerVisible] = useState(true)
-  const [activeFilter, setActiveFilter] = useState<FilterTab>('Все')
+  // ?tab=КОНТЕКСТ — открыть ленту сразу на нужной вкладке (показы, скриншоты)
+  const [activeFilter, setActiveFilter] = useState<FilterTab>(() => {
+    const t = new URLSearchParams(window.location.search).get('tab')
+    const tabs: FilterTab[] = ['Все', 'КОНТЕКСТ', 'Записи', 'Секретарь']
+    return tabs.find(x => x.toLowerCase() === (t ?? '').toLowerCase()) ?? 'Все'
+  })
   const [openEntry, setOpenEntry] = useState<CallEntry | null>(null)
   const [detailScreen, setDetailScreen] = useState<DetailScreen>('details')
   const [alertVisible, setAlertVisible] = useState(true)
@@ -3413,8 +3420,13 @@ export default function CallsToBe() {
               <button onClick={() => navigate('/calls')} className="flex items-center active:opacity-50 transition-opacity">
                 <span className="font-compact text-xs underline underline-offset-2" style={{ color: 'rgba(29,32,35,0.35)' }}>AsIs</span>
               </button>
-              <button onClick={() => navigate('/calls/catalog')} className="h-9 px-4 rounded-full flex items-center justify-center active:opacity-70 transition-opacity" style={{ background: 'rgba(29,32,35,0.07)' }}>
-                <span className="font-sans font-bold text-xs uppercase tracking-wide" style={{ color: '#1D2023' }}>Каталог</span>
+              {/* Каталог сервисов — иконкой, чтобы шапка не расползалась по ширине */}
+              <button onClick={() => navigate('/calls/catalog')} className="w-9 h-9 rounded-xl flex items-center justify-center active:opacity-70 transition-opacity" style={{ background: 'rgba(29,32,35,0.07)' }}>
+                <LayoutGrid size={18} strokeWidth={2} style={{ color: '#1D2023' }}/>
+              </button>
+              {/* Голосовая заметка без привязки — вход в «Мой Контекст» из ленты */}
+              <button onClick={() => navigate('/calls/note?rec=1')} className="w-9 h-9 rounded-xl flex items-center justify-center active:opacity-70 transition-opacity" style={{ background: 'rgba(29,32,35,0.07)' }}>
+                <Mic size={18} strokeWidth={2} style={{ color: '#1D2023' }}/>
               </button>
               <button onClick={() => setShowContacts(true)} className="w-9 h-9 rounded-xl flex items-center justify-center active:opacity-70 transition-opacity" style={{ background: 'rgba(29,32,35,0.07)' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D2023" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -3429,10 +3441,12 @@ export default function CallsToBe() {
               </button>
             </div>
           </div>
-          <div className="flex gap-2">
-            {(['Все', 'Полезное', 'Записи', 'Секретарь'] as FilterTab[]).map(tab => (
+          {/* Ряд фильтров прокручивается: «Мой контекст» длиннее прежнего
+              «Полезного» и вчетвером они уже не влезают в ширину экрана */}
+          <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4">
+            {(['Все', 'КОНТЕКСТ', 'Записи', 'Секретарь'] as FilterTab[]).map(tab => (
               <button key={tab} onClick={() => { setActiveFilter(tab); setBannerVisible(true) }}
-                className="rounded-full px-4 py-1.5 font-compact font-semibold text-sm transition-colors"
+                className="rounded-full px-4 py-1.5 font-compact font-semibold text-sm transition-colors whitespace-nowrap shrink-0"
                 style={{
                   background: activeFilter === tab ? '#1D2023' : 'rgba(29,32,35,0.07)',
                   color: activeFilter === tab ? 'white' : '#1D2023',
@@ -3450,6 +3464,61 @@ export default function CallsToBe() {
             {/* Дневник звонков — анонс недельного свода, вкладка «Все» */}
             {activeFilter === 'Все' && diaryVisible && (
               <DiaryCard onOpen={() => setShowDiary(true)} onDismiss={() => setDiaryVisible(false)}/>
+            )}
+
+            {/* Вход в «Мой Контекст» — вкладка про людей и договорённости,
+                поэтому первым идёт сам контекст, а не отмеченные звонки */}
+            {activeFilter === 'КОНТЕКСТ' && (
+              <div className="bg-white rounded-2xl p-4 mb-1" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EDE9FE' }}>
+                    <Mic size={19} strokeWidth={2} style={{ color: '#6D28D9' }}/>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-sans font-bold text-[15px]" style={{ color: '#1D2023' }}>Мой Контекст</p>
+                    <p className="font-compact text-[13px] leading-snug mt-0.5" style={{ color: '#8D969F' }}>
+                      Договорённости и факты по людям — из звонков и ваших заметок
+                    </p>
+                  </div>
+                </div>
+
+                <button onClick={() => navigate('/calls/note?rec=1')}
+                  className="w-full rounded-xl py-3 font-sans font-bold text-[15px] text-white active:opacity-85 transition-opacity flex items-center justify-center gap-2"
+                  style={{ background: '#1D2023' }}>
+                  <Mic size={16} strokeWidth={2.4}/>
+                  Записать заметку
+                </button>
+
+                <button onClick={() => navigate('/calls/dictaphone')}
+                  className="w-full flex items-center gap-2.5 pt-3 mt-3 active:opacity-60"
+                  style={{ borderTop: '1px solid #F2F2F7' }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: 'linear-gradient(180deg, #FF950099, #FF9500)' }}>
+                    <span className="font-sans font-bold text-[9px] text-white">СЕ</span>
+                  </div>
+                  <span className="font-compact text-[13px] flex-1 text-left" style={{ color: '#1D2023' }}>
+                    Сергей · 2 пункта без ответа
+                  </span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8D969F" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 18l6-6-6-6"/>
+                  </svg>
+                </button>
+
+                {/* Третий источник — мессенджер. Пересылка живёт в мессенджере,
+                    здесь пользователь узнаёт о боте и подключает его */}
+                <button onClick={() => navigate('/calls/forward?screen=connect')}
+                  className="w-full flex items-center gap-2.5 pt-3 mt-3 active:opacity-60"
+                  style={{ borderTop: '1px solid #F2F2F7' }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: '#CFFAFE' }}>
+                    <MessageCircle size={14} strokeWidth={2.4} style={{ color: '#0E7490' }}/>
+                  </div>
+                  <span className="flex-1 min-w-0 text-left">
+                    <span className="block font-compact text-[13px]" style={{ color: '#1D2023' }}>Пересылайте из мессенджера</span>
+                    <span className="block font-compact text-[12px] leading-snug" style={{ color: '#8D969F' }}>Договорённости из переписки тоже попадут сюда</span>
+                  </span>
+                  <span className="font-compact text-[13px] font-semibold shrink-0" style={{ color: '#0070E5' }}>Подключить</span>
+                </button>
+              </div>
             )}
 
             {/* Amber alert — only on "Записи" tab while not dismissed */}
@@ -3489,8 +3558,9 @@ export default function CallsToBe() {
               </div>
             )}
 
-            {/* Promo banner — не показываем на «Все» (там дневник), и на «Записи» под алертом */}
-            {bannerVisible && activeFilter !== 'Все' && !(activeFilter === 'Записи' && alertVisible) && (
+            {/* Promo banner — не показываем на «Все» (там дневник), на «Контексте»
+                (там карточка контекста) и на «Записи» под алертом */}
+            {bannerVisible && activeFilter !== 'Все' && activeFilter !== 'КОНТЕКСТ' && !(activeFilter === 'Записи' && alertVisible) && (
               <div className="banner-glow rounded-2xl p-[1.5px]">
                 <div
                   className="bg-white rounded-[14px] p-4 flex items-center gap-3 cursor-pointer active:opacity-80 transition-opacity"

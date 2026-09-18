@@ -98,3 +98,12 @@
   background-size: 400% 400%;
   animation: bannerBorderSpin 4s ease infinite;
 }
+
+/* Горизонтальные ряды-«пилюли»: прокрутка без видимой полосы */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

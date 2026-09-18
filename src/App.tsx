@@ -8,6 +8,9 @@ import Support from './screens/Support'
 import Money from './screens/Money'
 import Calls from './screens/Calls'
 import CallsToBe from './screens/CallsToBe'
+import CallsDictaphone from './screens/CallsDictaphone'
+import CallsFreeNote from './screens/CallsFreeNote'
+import CallsForward from './screens/CallsForward'
 import CallSettings from './screens/CallSettings'
 import CallsCatalog from './screens/CallsCatalog'
 import SecretaryPromo from './screens/SecretaryPromo'
@@ -31,6 +34,9 @@ export default function App() {
       <Route path="/money" element={<Money />} />
       <Route path="/calls" element={<Calls />} />
       <Route path="/calls/tobe" element={<CallsToBe />} />
+      <Route path="/calls/dictaphone" element={<CallsDictaphone />} />
+      <Route path="/calls/note" element={<CallsFreeNote />} />
+      <Route path="/calls/forward" element={<CallsForward />} />
       <Route path="/calls/settings" element={<CallSettings />} />
       <Route path="/calls/catalog" element={<CallsCatalog />} />
       <Route path="/calls/secretary-promo" element={<SecretaryPromo />} />
