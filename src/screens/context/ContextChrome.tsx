@@ -1,14 +1,16 @@
-import { Home, Mic, Search, ArrowLeft, ChevronRight, Phone, MessageCircle, Eye, Trash2 } from 'lucide-react'
+import { Home, Mic, Waypoints, ArrowLeft, ChevronRight, Phone, MessageCircle, Eye, Trash2 } from 'lucide-react'
 
 // ─── Отдельное приложение «Мой Контекст» ──────────────────────────────────────
 // Контекст вынесен из Мой МТС в своё приложение. Главный экран — лента звонков
 // (CallsToBe в режиме app="context"), здесь — то, чего в Мой МТС не было:
 // свой таббар с диктофоном по центру и свои настройки.
 
-export type ContextTab = 'home' | 'search'
+export type ContextTab = 'home' | 'context'
+
 
 // Диктофон — главное действие приложения, поэтому крупная кнопка ровно по
-// центру. По краям — «Главная» и «Поиск»; контакты и настройки живут в шапке.
+// центру. По краям — «Главная» (все звонки) и «Контекст» (разговоры, из которых
+// что-то легло в граф); контакты и настройки живут в шапке.
 export function ContextTabBar({ active, onTab, onRecord }: {
   active: ContextTab; onTab: (t: ContextTab) => void; onRecord: () => void
 }) {
@@ -29,7 +31,8 @@ export function ContextTabBar({ active, onTab, onRecord }: {
       <div className="relative flex items-stretch">
         <div className="flex-1 flex"><Item tab="home" label="Главная" Icon={Home}/></div>
         <div style={{ width: 84 }} className="shrink-0"/>
-        <div className="flex-1 flex"><Item tab="search" label="Поиск" Icon={Search}/></div>
+        <div className="flex-1 flex">{/* Граф связей: люди, задачи, сюжеты — перекликается с аватаром бота */}
+          <Item tab="context" label="Контекст" Icon={Waypoints}/></div>
 
         {/* Диктофон — приподнят над баром, подпись на одной линии с остальными */}
         <button onClick={onRecord}
@@ -39,7 +42,7 @@ export function ContextTabBar({ active, onTab, onRecord }: {
             style={{ width: 52, height: 52, background: '#E30611', boxShadow: '0 5px 14px rgba(227,6,17,0.32), 0 0 0 4px white' }}>
             <Mic size={22} strokeWidth={2.2} style={{ color: 'white' }}/>
           </span>
-          <span className="font-compact text-[11px] font-medium mt-1" style={{ color: '#1D2023' }}>Диктофон</span>
+          <span className="font-compact text-[11px] font-medium mt-1" style={{ color: '#1D2023' }}>Записать</span>
         </button>
       </div>
     </nav>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, X, Grid3x3, LayoutGrid, Play, ArrowLeft, MoreHorizontal, ThumbsUp, ThumbsDown, Bell, FileText, Mic, MessageCircle, Search } from 'lucide-react'
+import { Settings, X, Grid3x3, LayoutGrid, Play, ArrowLeft, MoreHorizontal, ThumbsUp, ThumbsDown, Bell, FileText, Mic, MessageCircle } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { BottomNav } from '../components/layout/BottomNav'
 import { ContextTabBar, ContextSettings, type ContextTab } from './context/ContextChrome'
@@ -3291,24 +3291,27 @@ function ContactsScreen({ onBack }: { onBack?: () => void }) {
 type DetailScreen = 'details' | 'transcript'
 
 // app="context" — тот же экран как главная отдельного приложения «Мой Контекст»:
-// без вкладок услуг МТС и каталога, диктофон в таббаре, поиск в шапке
+// без фильтров и каталога; «Главная» (все звонки) и «Контекст» — вкладки таббара,
+// запись по центру, контакты и настройки в шапке
 export default function CallsToBe({ app = 'mts' }: { app?: 'mts' | 'context' }) {
   const navigate = useNavigate()
   const isCtx = app === 'context'
   const home = isCtx ? '/context' : '/calls/tobe'
-  const FILTERS: FilterTab[] = isCtx ? ['Все', 'КОНТЕКСТ'] : ['Все', 'КОНТЕКСТ', 'Записи', 'Секретарь']
-  // ?view=search|contacts|settings — открыть приложение сразу на нужном экране (показы, скриншоты)
-  const view = isCtx ? new URLSearchParams(window.location.search).get('view') : null
-  const [ctxTab, setCtxTab] = useState<ContextTab>(view === 'search' ? 'search' : 'home')
+  const FILTERS: FilterTab[] = ['Все', 'КОНТЕКСТ', 'Записи', 'Секретарь']
+  const params = new URLSearchParams(window.location.search)
+  // ?view=context|contacts|settings — открыть приложение сразу на нужном экране (показы, скриншоты)
+  const view = isCtx ? params.get('view') : null
+  const [ctxTab, setCtxTab] = useState<ContextTab>(
+    view === 'context' || params.get('tab')?.toLowerCase() === 'контекст' ? 'context' : 'home')
   const [showCtxSettings, setShowCtxSettings] = useState(view === 'settings')
-  const [query, setQuery] = useState('')
-  const searchOpen = isCtx && ctxTab === 'search'
   const [bannerVisible, setBannerVisible] = useState(true)
   // ?tab=КОНТЕКСТ — открыть ленту сразу на нужной вкладке (показы, скриншоты)
-  const [activeFilter, setActiveFilter] = useState<FilterTab>(() => {
-    const t = new URLSearchParams(window.location.search).get('tab')
+  const [filterState, setActiveFilter] = useState<FilterTab>(() => {
+    const t = params.get('tab')
     return FILTERS.find(x => x.toLowerCase() === (t ?? '').toLowerCase()) ?? 'Все'
   })
+  // В приложении «Мой Контекст» фильтров нет — ленту выбирает вкладка таббара
+  const activeFilter: FilterTab = isCtx ? (ctxTab === 'context' ? 'КОНТЕКСТ' : 'Все') : filterState
   const [openEntry, setOpenEntry] = useState<CallEntry | null>(null)
   const [detailScreen, setDetailScreen] = useState<DetailScreen>('details')
   const [alertVisible, setAlertVisible] = useState(true)
@@ -3433,11 +3436,7 @@ export default function CallsToBe({ app = 'mts' }: { app?: 'mts' | 'context' }) 
   }
 
   const banner = BANNERS[activeFilter]
-  // Поиск в шапке приложения «Мой Контекст» — по имени и теме звонка
-  const q = query.trim().toLowerCase()
   const filteredLog = getFilteredLog(activeFilter)
-    .map(g => ({ ...g, calls: q ? g.calls.filter(c => `${c.name} ${c.topic ?? ''}`.toLowerCase().includes(q)) : g.calls }))
-    .filter(g => g.calls.length > 0)
   const isCardView = activeFilter === 'Записи' || activeFilter === 'Секретарь'
 
   return (
@@ -3451,9 +3450,11 @@ export default function CallsToBe({ app = 'mts' }: { app?: 'mts' | 'context' }) 
             background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(249,249,251,0.65) 55%, #F2F3F7 100%), url(/undercover.svg) top center/100% auto no-repeat',
           }}
         >
-          <div className="flex items-start justify-between mb-4">
+          <div className={`flex items-start justify-between ${isCtx ? 'mb-1' : 'mb-4'}`}>
             <div>
-              <h1 className="font-sans font-black text-[1.75rem] leading-tight" style={{ color: '#1D2023' }}>Звонки</h1>
+              <h1 className={`font-sans font-black leading-tight ${isCtx ? 'text-[1.5rem]' : 'text-[1.75rem]'}`} style={{ color: '#1D2023' }}>
+                {isCtx ? 'Мой Контекст' : 'Звонки'}
+              </h1>
               <p className="font-compact font-normal text-sm" style={{ color: '#8D969F' }}>{PHONE_NUMBER}</p>
             </div>
             {isCtx ? (
@@ -3497,23 +3498,9 @@ export default function CallsToBe({ app = 'mts' }: { app?: 'mts' | 'context' }) 
             </div>
             )}
           </div>
-          {isCtx && searchOpen && (
-            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-3 bg-white" style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.06)' }}>
-              <Search size={16} strokeWidth={2} style={{ color: '#8D969F' }}/>
-              <input autoFocus value={query} onChange={e => setQuery(e.target.value)}
-                placeholder="Люди, темы разговоров"
-                className="flex-1 bg-transparent outline-none font-compact text-sm" style={{ color: '#1D2023' }}/>
-              {query && (
-                <button onClick={() => setQuery('')} className="active:opacity-60">
-                  <X size={14} strokeWidth={2.2} style={{ color: '#8D969F' }}/>
-                </button>
-              )}
-            </div>
-          )}
-          {/* ↑ поле поиска открывается вкладкой «Поиск» в таббаре */}
           {/* Ряд фильтров прокручивается: «Мой контекст» длиннее прежнего
               «Полезного» и вчетвером они уже не влезают в ширину экрана */}
-          <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4">
+          {!isCtx && <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4">
             {FILTERS.map(tab => (
               <button key={tab} onClick={() => { setActiveFilter(tab); setBannerVisible(true) }}
                 className="rounded-full px-4 py-1.5 font-compact font-semibold text-sm transition-colors whitespace-nowrap shrink-0"
@@ -3524,7 +3511,7 @@ export default function CallsToBe({ app = 'mts' }: { app?: 'mts' | 'context' }) 
                 {tab}
               </button>
             ))}
-          </div>
+          </div>}
         </div>
 
         {/* Content */}
@@ -3532,13 +3519,13 @@ export default function CallsToBe({ app = 'mts' }: { app?: 'mts' | 'context' }) 
           <div className="px-2 pt-3 flex flex-col gap-[6px]">
 
             {/* Дневник звонков — анонс недельного свода, вкладка «Все» */}
-            {activeFilter === 'Все' && diaryVisible && !q && (
+            {activeFilter === 'Все' && diaryVisible && (
               <DiaryCard onOpen={() => setShowDiary(true)} onDismiss={() => setDiaryVisible(false)}/>
             )}
 
             {/* Вход в «Мой Контекст» — вкладка про людей и договорённости,
                 поэтому первым идёт сам контекст, а не отмеченные звонки */}
-            {activeFilter === 'КОНТЕКСТ' && !q && (
+            {activeFilter === 'КОНТЕКСТ' && (
               <div className="bg-white rounded-2xl p-4 mb-1" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EDE9FE' }}>
@@ -3770,7 +3757,7 @@ export default function CallsToBe({ app = 'mts' }: { app?: 'mts' | 'context' }) 
         </div>}
 
         {isCtx
-          ? <ContextTabBar active={ctxTab} onTab={t => { setCtxTab(t); setQuery('') }} onRecord={() => navigate('/calls/note?rec=1')}/>
+          ? <ContextTabBar active={ctxTab} onTab={setCtxTab} onRecord={() => navigate('/calls/note?rec=1')}/>
           : <BottomNav/>}
 
         {/* Delay alert modal */}
